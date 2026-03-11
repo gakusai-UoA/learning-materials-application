@@ -34,6 +34,10 @@ export function setupServerHandlers() {
 					JSON.stringify({ name: `part${partId}-react`, scripts: { dev: "vite" } }, null, 2),
 				);
 				await fs.writeFile(
+					path.join(projectPath, "vite.config.ts"),
+					'import { defineConfig } from "vite";\\nimport react from "@vitejs/plugin-react";\\n\\nexport default defineConfig({\n  plugins: [react()],\n});',
+				);
+				await fs.writeFile(
 					path.join(projectPath, "index.html"),
 					'<!DOCTYPE html>\n<html lang="ja">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n    <title>React App</title>\n  </head>\n  <body>\n    <div id="root"></div>\n    <script type="module" src="/src/main.tsx"></script>\n  </body>\n</html>',
 				);
