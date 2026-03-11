@@ -329,12 +329,12 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 				</div>
 				<div className="flex flex-wrap gap-2">
 					<button
-						className="flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+						className="flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-muted-foreground text-xs hover:bg-accent hover:text-accent-foreground"
 						onClick={handleOpenEditor}
-						title="現在のプロジェクトを外部エディター(VSCode等)で開きます"
+						title="現在のプロジェクトを外部エディター(Antigravity等)で開きます"
 					>
 						<ExternalLink className="h-4 w-4" />
-						エディターで開く
+						Antigravityで開く
 					</button>
 				</div>
 			</div>
@@ -445,7 +445,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 									) : (
 										// React
 										<div className="flex h-8 w-full items-center border-b bg-zinc-200 px-4">
-											<span className="font-mono text-xs text-zinc-500 flex-1">
+											<span className="flex-1 font-mono text-xs text-zinc-500">
 												http://localhost:{reactPort}/
 											</span>
 											<button
@@ -459,7 +459,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 									)}
 
 									{activeEnv === "hono" && (
-										<div className="absolute right-4 top-1.5 z-10">
+										<div className="absolute top-1.5 right-4 z-10">
 											<button
 												onClick={handleReloadPreview}
 												className="rounded p-1 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800"

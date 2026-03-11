@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import * as path from "node:path";
 import { BrowserWindow, ipcMain } from "electron";
 import { globalState } from "../state";
+
 const kill = require("tree-kill");
 
 export function setupServerHandlers() {

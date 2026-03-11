@@ -82,12 +82,9 @@ export function SlideViewer({ partId, keyboardEnabled = false, onPartNavigate }:
 
 	return (
 		<div className="flex h-full flex-col overflow-hidden border-r bg-zinc-100 p-4 dark:bg-zinc-900">
-			{/* biome-ignore lint/a11y/useKeyWithClickEvents: グローバルなuseEffectでキー操作をハンドルしているため */}
 			<div
-				className="flex flex-1 items-center justify-center overflow-y-auto overflow-x-hidden bg-muted/20 p-4 cursor-pointer"
+				className="flex flex-1 items-center justify-center overflow-y-auto overflow-x-hidden bg-muted/20 p-4"
 				ref={containerRef}
-				onClick={handleNextSlide}
-				title="クリックで次のスライドへ"
 			>
 				{pdfError ? (
 					<div className="p-2 text-center text-destructive">

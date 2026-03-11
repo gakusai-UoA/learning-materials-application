@@ -63,14 +63,13 @@ export default function App() {
   const [count, setCount] = useState(0);
 
   return (
-    <div className="p-8 font-sans text-zinc-200">
-      <h1 className="text-2xl font-bold font-sans mb-4">
+    <div>
+      <h1>
         Reactへようこそ！
       </h1>
       <button
         type="button"
         onClick={() => setCount((c) => c + 1)}
-        className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 transition-colors"
       >
         Count: {count}
       </button>
