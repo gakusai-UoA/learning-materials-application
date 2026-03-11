@@ -1,0 +1,17 @@
+sequenceDiagram
+    autonumber
+    participant FE as Frontend (React/JS)
+    participant BE as Backend (Hono)
+    participant DB as Database (Firestore)
+
+    Note over FE,BE: API Request (HTTP POST)
+    FE->>+BE: POST /api/votes { boothId: "B-123" }
+    
+    Note right of BE: Logic: Validation & Storage
+    BE->>DB: Write Data
+    DB-->>BE: Success
+    
+    Note over BE,FE: API Response (JSON)
+    BE-->>-FE: 200 OK { votes: 50, message: "完了" }
+    
+    Note left of FE: Update UI with Response Data

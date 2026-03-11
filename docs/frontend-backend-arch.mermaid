@@ -1,0 +1,20 @@
+graph LR
+    subgraph Frontend ["Frontend (Browser/Client)"]
+        UI[User Interface]
+        Logic[JS Logic]
+    end
+
+    subgraph Backend ["Backend (Server/Cloud)"]
+        API[Hono API]
+        DB[(Cloud Firestore)]
+    end
+
+    UI -->|Interaction| Logic
+    Logic -->|HTTP Request| API
+    API -->|Read/Write| DB
+    API -->|HTTP Response (JSON)| Logic
+    Logic -->|Update UI| UI
+
+    style Frontend fill:#e1f5fe,stroke:#01579b
+    style Backend fill:#fff3e0,stroke:#e65100
+    style DB fill:#f1f8e9,stroke:#33691e
