@@ -20,6 +20,7 @@ declare global {
 			) => Promise<{ success: boolean; port?: number; error?: string }>;
 			stopServer: (type: "react" | "hono") => Promise<{ success: boolean; error?: string }>;
 			openTerminal: () => Promise<{ success: boolean; error?: string }>;
+			openEditor: (partId: number) => Promise<{ success: boolean; error?: string }>;
 			onServerLog: (
 				callback: (data: { type: "stdout" | "stderr"; serverType: "react" | "hono"; text: string }) => void,
 			) => void;

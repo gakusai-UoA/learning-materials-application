@@ -13,6 +13,7 @@ const api = {
 	startServer: (partId: number, type: "react" | "hono") => ipcRenderer.invoke("start-server", partId, type),
 	stopServer: (type: "react" | "hono") => ipcRenderer.invoke("stop-server", type),
 	openTerminal: () => ipcRenderer.invoke("open-terminal"),
+	openEditor: (partId: number) => ipcRenderer.invoke("open-editor", partId),
 	onServerLog: (
 		callback: (data: { type: "stdout" | "stderr"; serverType: "react" | "hono"; text: string }) => void,
 	) => {

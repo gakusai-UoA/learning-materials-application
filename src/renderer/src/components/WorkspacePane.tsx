@@ -1,5 +1,5 @@
 import Editor, { type Monaco } from "@monaco-editor/react";
-import { Globe, Terminal as TerminalIcon } from "lucide-react";
+import { ExternalLink, Globe, RefreshCcw, Terminal as TerminalIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
 
@@ -54,6 +54,9 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 	// URL paths
 	const [honoUrlPath, setHonoUrlPath] = useState("/");
 	const [honoInputUrl, setHonoInputUrl] = useState("/");
+
+	// Reload state
+	const [previewReloadKey, setPreviewReloadKey] = useState(0);
 
 	// Logs state
 	const [honoServerLogs, setHonoServerLogs] = useState<{ type: "stdout" | "stderr"; text: string }[]>([]);
@@ -123,8 +126,8 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 
 	const loadFiles = async () => {
 		// ユーザー要望のディレクトリ構成 (partX/react, partX/hono)
-		const reactFile = `Part-${partId}/react/App.tsx`;
-		const honoFile = `Part-${partId}/hono/index.ts`;
+		const reactFile = `Part-${partId}/react/src/App.tsx`;
+		const honoFile = `Part-${partId}/hono/src/index.ts`;
 
 		const reactRes = await window.api.readFile(reactFile);
 		if (reactRes.success && reactRes.content) setReactCode(reactRes.content);
@@ -134,7 +137,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 	};
 
 	const saveFile = async (type: "react" | "hono", currentCode: string) => {
-		const filename = type === "react" ? `Part-${partId}/react/App.tsx` : `Part-${partId}/hono/index.ts`;
+		const filename = type === "react" ? `Part-${partId}/react/src/App.tsx` : `Part-${partId}/hono/src/index.ts`;
 
 		const formatRes = await window.api.formatCode(filename, currentCode);
 		let finalCode = currentCode;
@@ -201,6 +204,19 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		let dest = honoInputUrl;
 		if (!dest.startsWith("/")) dest = `/${dest}`;
 		setHonoUrlPath(dest);
+	};
+
+	const handleReloadPreview = () => {
+		setPreviewReloadKey((prev) => prev + 1);
+	};
+
+	const handleOpenEditor = async () => {
+		const res = await window.api.openEditor(partId);
+		if (!res.success) {
+			alert(
+				`エディターの起動に失敗しました:\n${res.error}\n\nAntigravity または VSCode へのパスが通っているか確認してください。`,
+			);
+		}
 	};
 
 	// Monaco Editor の初期設定（JSX解釈と簡易型宣言の注入）
@@ -296,6 +312,16 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 						<TerminalIcon className="h-4 w-4" /> Hono
 					</button>
 				</div>
+				<div className="flex flex-wrap gap-2">
+					<button
+						className="flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+						onClick={handleOpenEditor}
+						title="現在のプロジェクトを外部エディター(VSCode等)で開きます"
+					>
+						<ExternalLink className="h-4 w-4" />
+						エディターで開く
+					</button>
+				</div>
 			</div>
 
 			{/* 2段目：ビュートグル */}
@@ -335,8 +361,8 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 										defaultLanguage="typescript"
 										path={
 											activeEnv === "react"
-												? `Part-${partId}/react/App.tsx`
-												: `Part-${partId}/hono/index.ts`
+												? `Part-${partId}/react/src/App.tsx`
+												: `Part-${partId}/hono/src/index.ts`
 										}
 										theme="vs-dark"
 										value={activeEnv === "react" ? reactCode : honoCode}
@@ -404,9 +430,28 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 									) : (
 										// React
 										<div className="flex h-8 w-full items-center border-b bg-zinc-200 px-4">
-											<span className="font-mono text-xs text-zinc-500">
+											<span className="font-mono text-xs text-zinc-500 flex-1">
 												http://localhost:{reactPort}/
 											</span>
+											<button
+												onClick={handleReloadPreview}
+												className="rounded p-1 text-zinc-500 hover:bg-zinc-300 hover:text-zinc-800"
+												title="プレビューを更新"
+											>
+												<RefreshCcw className="h-4 w-4" />
+											</button>
+										</div>
+									)}
+
+									{activeEnv === "hono" && (
+										<div className="absolute right-4 top-1.5 z-10">
+											<button
+												onClick={handleReloadPreview}
+												className="rounded p-1 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800"
+												title="プレビューを更新"
+											>
+												<RefreshCcw className="h-4 w-4" />
+											</button>
 										</div>
 									)}
 
@@ -414,7 +459,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 										{(activeEnv === "react" && reactRunning) ||
 										(activeEnv === "hono" && honoRunning) ? (
 											<iframe
-												key={`${activeEnv}-${activeEnv === "react" ? reactPort : honoPort}-${honoUrlPath}`}
+												key={`${activeEnv}-${activeEnv === "react" ? reactPort : honoPort}-${honoUrlPath}-${previewReloadKey}`}
 												src={`http://localhost:${activeEnv === "react" ? reactPort : honoPort}${activeEnv === "hono" ? honoUrlPath : ""}`}
 												className="absolute inset-0 h-full w-full border-none"
 												title="Preview"

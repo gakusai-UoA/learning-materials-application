@@ -13,7 +13,20 @@ export function setupEnvHandlers() {
 
 		// ElectronのメインプロセスではPATHが極端に短いことがあるため補完する
 		if (isMac || isWin) {
-			process.env.PATH = `${process.env.PATH}:/usr/local/bin:/opt/homebrew/bin:/opt/nodejs/bin`;
+			const agyPath = isWin
+				? path.join(os.homedir(), "AppData", "Local", "Programs", "Antigravity")
+				: path.join(os.homedir(), ".antigravity", "antigravity", "bin");
+
+			const pathsToAdd = [agyPath];
+			if (isMac || process.platform === "linux") {
+				pathsToAdd.push("/usr/local/bin", "/opt/homebrew/bin", "/opt/nodejs/bin");
+			}
+
+			for (const p of pathsToAdd) {
+				if (!process.env.PATH?.includes(p)) {
+					process.env.PATH = `${process.env.PATH}${path.delimiter}${p}`;
+				}
+			}
 		}
 
 		const notify = (msg: string) => {
@@ -107,6 +120,7 @@ export function setupEnvHandlers() {
 					react: "^18.2.0",
 					"react-dom": "^18.2.0",
 					hono: "^4.0.0",
+					cors: "^2.8.5",
 				},
 				devDependencies: {
 					vite: "^5.1.4",
@@ -117,6 +131,7 @@ export function setupEnvHandlers() {
 					typescript: "^5.2.2",
 					"@types/react": "^18.2.61",
 					"@types/react-dom": "^18.2.19",
+					"@types/cors": "^2.8.17",
 				},
 			};
 			await fs.writeFile(path.join(globalState.workspaceDir, "package.json"), JSON.stringify(rootPkg, null, 2));
