@@ -1,3 +1,4 @@
+import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,8 @@ const PARTS = [
 
 export function StartMenu() {
 	const navigate = useNavigate();
-	const [isPreparing, setIsPreparing] = useState(false);
+	const [isPreparing, setIsPreparing] = useState(true);
+	const [progressMsg, setProgressMsg] = useState("環境を確認しています...");
 	const [session, setSession] = useState<SessionType>("all");
 	const [stack, setStack] = useState<string>("all");
 
@@ -51,22 +53,44 @@ export function StartMenu() {
 
 	useEffect(() => {
 		setIsPreparing(true);
+
+		const handleProgress = (msg: string) => {
+			setProgressMsg(msg);
+		};
+		window.api.onEnvProgress(handleProgress);
+
 		window.api
 			.verifyEnvironment()
-			.then(() => setIsPreparing(false))
+			.then(() => {
+				setIsPreparing(false);
+			})
 			.catch((e) => {
 				console.error("Environment check failed", e);
-				setIsPreparing(false);
+				setProgressMsg("環境構築中にエラーが発生しました。");
+				// しばらくしてから進めるか？
+				setTimeout(() => setIsPreparing(false), 3000);
+			})
+			.finally(() => {
+				window.api.offEnvProgress();
 			});
 	}, []);
 
+	if (isPreparing) {
+		return (
+			<div className="flex min-h-screen flex-col items-center justify-center bg-background text-foreground">
+				<div className="flex flex-col items-center gap-6 rounded-2xl border bg-card/50 p-12 text-center shadow-sm">
+					<Loader2 className="h-12 w-12 animate-spin text-primary" />
+					<div>
+						<h2 className="mb-2 font-bold text-xl">学習環境を準備しています</h2>
+						<p className="font-medium text-muted-foreground">{progressMsg}</p>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="relative flex min-h-screen flex-col bg-background p-8 text-foreground">
-			{isPreparing && (
-				<div className="fixed right-6 bottom-6 z-50 animate-pulse rounded-full bg-primary px-5 py-2.5 font-semibold text-primary-foreground text-sm shadow-xl">
-					依存環境(Node/Git)を確認・準備中...
-				</div>
-			)}
 			<div className="mx-auto flex w-full max-w-5xl flex-1 flex-col pt-12">
 				<h1 className="mb-2 font-bold text-4xl">現代的Web開発・基礎勉強会</h1>
 				<p className="mb-8 text-muted-foreground">

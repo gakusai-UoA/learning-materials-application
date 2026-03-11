@@ -1,4 +1,4 @@
-import Editor from "@monaco-editor/react";
+import Editor, { type Monaco } from "@monaco-editor/react";
 import { Globe, Terminal as TerminalIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
@@ -8,11 +8,27 @@ interface WorkspacePaneProps {
 }
 
 // 初期コードモック
-const REACT_MOCK = `// React (Frontend) Entry Point
-console.log("React app initialized");
+const REACT_MOCK = `import { useState } from "react";
+
+export default function App() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <h1>
+        Reactへようこそ！
+      </h1>
+      <button
+        type="button"
+        onClick={() => setCount((c) => c + 1)}
+      >
+        Count: {count}
+      </button>
+    </div>
+  );
+}
 `;
-const HONO_MOCK = `// Hono (Backend) Entry Point
-import { Hono } from 'hono'
+const HONO_MOCK = `import { Hono } from 'hono'
 const app = new Hono()
 
 app.get('/', (c) => c.text('Hello Hono!'))
@@ -82,6 +98,9 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 			} else {
 				if (log.serverType === "hono") {
 					setHonoServerLogs((prev) => [...prev, { type: log.type, text: log.text }]);
+				} else if (log.serverType === "react") {
+					// Vite (React) のサーバー出力（ビルドエラー等）も表示させる
+					setReactBrowserLogs((prev) => [...prev, { type: log.type, text: log.text }]);
 				}
 			}
 		});
@@ -184,6 +203,54 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		setHonoUrlPath(dest);
 	};
 
+	// Monaco Editor の初期設定（JSX解釈と簡易型宣言の注入）
+	const handleEditorWillMount = (monaco: Monaco) => {
+		monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+			jsx: monaco.languages.typescript.JsxEmit.ReactJSX, // React 17以降のJSXトランスフォーム
+			jsxImportSource: "react",
+			esModuleInterop: true,
+			allowNonTsExtensions: true,
+			allowJs: true,
+			moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+			module: monaco.languages.typescript.ModuleKind.CommonJS,
+			target: monaco.languages.typescript.ScriptTarget.ESNext,
+		});
+
+		// 学習表示用の簡易的なReactの型宣言をモック
+		monaco.languages.typescript.typescriptDefaults.addExtraLib(
+			`declare module "react" {
+				export function useState<T>(initialState: T | (() => T)): [T, (newState: T | ((prevState: T) => T)) => void];
+				export function useEffect(effect: () => void | (() => void), deps?: readonly any[]): void;
+				export function useRef<T>(initialValue: T): { current: T };
+				export function useMemo<T>(factory: () => T, deps: readonly any[] | undefined): T;
+				export function useCallback<T extends (...args: any[]) => any>(callback: T, deps: readonly any[] | undefined): T;
+				export const StrictMode: any;
+				const React: any;
+				export default React;
+			}
+			declare module "react/jsx-runtime" {
+				export const jsx: any;
+				export const jsxs: any;
+				export const Fragment: any;
+			}`,
+			"file:///node_modules/@types/react/index.d.ts",
+		);
+
+		// Honoの簡易的な型宣言をモック
+		monaco.languages.typescript.typescriptDefaults.addExtraLib(
+			`declare module "hono" {
+				export class Hono {
+					get(path: string, handler: (c: any) => any): this;
+					post(path: string, handler: (c: any) => any): this;
+					put(path: string, handler: (c: any) => any): this;
+					delete(path: string, handler: (c: any) => any): this;
+				}
+				export default Hono;
+			}`,
+			"file:///node_modules/hono/index.d.ts",
+		);
+	};
+
 	// ログ描画ヘルパー
 	const renderLogs = (
 		logs: { type: "stdout" | "stderr"; text: string }[],
@@ -274,6 +341,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 										theme="vs-dark"
 										value={activeEnv === "react" ? reactCode : honoCode}
 										onChange={handleEditorChange}
+										beforeMount={handleEditorWillMount}
 										options={{
 											minimap: { enabled: false },
 											fontSize: 14,

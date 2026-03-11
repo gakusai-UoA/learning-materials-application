@@ -4,6 +4,7 @@ import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import { app, BrowserWindow, ipcMain, net, protocol, shell } from "electron";
 import icon from "../../resources/icon.png?asset";
 import { setupIpcHandlers } from "./ipc";
+import { globalState } from "./state";
 
 protocol.registerSchemesAsPrivileged([
 	{
@@ -29,6 +30,7 @@ function createWindow(): void {
 		webPreferences: {
 			preload: join(__dirname, "../preload/index.js"),
 			sandbox: false,
+			devTools: false,
 		},
 	});
 
@@ -114,6 +116,16 @@ app.whenReady().then(() => {
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
 	app.quit();
+});
+
+// アプリ終了時に裏側で走っているVite/Wrangler等のサーバープロセスを確実に止める
+app.on("before-quit", () => {
+	if (globalState.activeReactProcess) {
+		globalState.activeReactProcess.kill();
+	}
+	if (globalState.activeHonoProcess) {
+		globalState.activeHonoProcess.kill();
+	}
 });
 
 // In this file you can include the rest of your app's specific main process

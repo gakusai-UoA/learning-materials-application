@@ -24,6 +24,8 @@ declare global {
 				callback: (data: { type: "stdout" | "stderr"; serverType: "react" | "hono"; text: string }) => void,
 			) => void;
 			offServerLog: () => void;
+			onEnvProgress: (callback: (msg: string) => void) => void;
+			offEnvProgress: () => void;
 		};
 	}
 }

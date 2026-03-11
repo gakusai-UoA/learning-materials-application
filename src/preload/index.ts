@@ -21,6 +21,12 @@ const api = {
 	offServerLog: () => {
 		ipcRenderer.removeAllListeners("server-log");
 	},
+	onEnvProgress: (callback: (msg: string) => void) => {
+		ipcRenderer.on("env-progress", (_event, msg) => callback(msg));
+	},
+	offEnvProgress: () => {
+		ipcRenderer.removeAllListeners("env-progress");
+	},
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to
