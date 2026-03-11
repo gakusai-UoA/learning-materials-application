@@ -1,9 +1,9 @@
-import * as fs from 'node:fs/promises';
-import { dialog, ipcMain } from 'electron';
-import { globalState } from '../state';
+import * as fs from "node:fs/promises";
+import { dialog, ipcMain } from "electron";
+import { globalState } from "../state";
 
 export function setupWorkspaceHandlers() {
-	ipcMain.handle('get-workspace-dir', async () => {
+	ipcMain.handle("get-workspace-dir", async () => {
 		try {
 			await fs.mkdir(globalState.workspaceDir, { recursive: true });
 			return globalState.workspaceDir;
@@ -12,9 +12,9 @@ export function setupWorkspaceHandlers() {
 		}
 	});
 
-	ipcMain.handle('set-workspace-dir', async () => {
+	ipcMain.handle("set-workspace-dir", async () => {
 		const { canceled, filePaths } = await dialog.showOpenDialog({
-			properties: ['openDirectory', 'createDirectory'],
+			properties: ["openDirectory", "createDirectory"],
 		});
 		if (!canceled && filePaths.length > 0) {
 			globalState.workspaceDir = filePaths[0];

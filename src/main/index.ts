@@ -1,13 +1,13 @@
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { electronApp, is, optimizer } from '@electron-toolkit/utils';
-import { app, BrowserWindow, ipcMain, net, protocol, shell } from 'electron';
-import icon from '../../resources/icon.png?asset';
-import { setupIpcHandlers } from './ipc';
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { electronApp, is, optimizer } from "@electron-toolkit/utils";
+import { app, BrowserWindow, ipcMain, net, protocol, shell } from "electron";
+import icon from "../../resources/icon.png?asset";
+import { setupIpcHandlers } from "./ipc";
 
 protocol.registerSchemesAsPrivileged([
 	{
-		scheme: 'asset',
+		scheme: "asset",
 		privileges: {
 			secure: true,
 			standard: true,
@@ -25,30 +25,30 @@ function createWindow(): void {
 		height: 670,
 		show: false,
 		autoHideMenuBar: true,
-		...(process.platform === 'linux' ? { icon } : {}),
+		...(process.platform === "linux" ? { icon } : {}),
 		webPreferences: {
-			preload: join(__dirname, '../preload/index.js'),
+			preload: join(__dirname, "../preload/index.js"),
 			sandbox: false,
 		},
 	});
 
-	mainWindow.on('ready-to-show', () => {
+	mainWindow.on("ready-to-show", () => {
 		mainWindow.show();
 	});
 
 	mainWindow.webContents.setWindowOpenHandler((details) => {
 		shell.openExternal(details.url);
-		return { action: 'deny' };
+		return { action: "deny" };
 	});
 
 	// iframe内（プレビュー・ブラウザサイド）の console.log などを拾う
-	mainWindow.webContents.on('console-message', (_event, level, message, _line, sourceId) => {
+	mainWindow.webContents.on("console-message", (_event, level, message, _line, sourceId) => {
 		// localhost:xxx へのアクセス（ただしElectronのRendererである5174を除く）をプレビューアプリからのログと判定
-		if (sourceId?.includes('http://localhost:') && !sourceId.includes('localhost:5174')) {
+		if (sourceId?.includes("http://localhost:") && !sourceId.includes("localhost:5174")) {
 			// level: 0=debug, 1=info, 2=warning, 3=error
-			const type = level >= 2 ? 'stderr' : 'stdout';
-			const serverType = sourceId.includes('8787') ? 'hono' : 'react';
-			mainWindow.webContents.send('server-log', {
+			const type = level >= 2 ? "stderr" : "stdout";
+			const serverType = sourceId.includes("8787") ? "hono" : "react";
+			mainWindow.webContents.send("server-log", {
 				type,
 				serverType,
 				text: `[Browser] ${message}`,
@@ -61,7 +61,7 @@ function createWindow(): void {
 	if (is.dev && process.env.ELECTRON_RENDERER_URL) {
 		mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
 	} else {
-		mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
+		mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
 	}
 }
 
@@ -70,19 +70,19 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
 	// Set app user model id for windows
-	electronApp.setAppUserModelId('com.electron');
+	electronApp.setAppUserModelId("com.electron");
 
 	// カスタムプロトコル asset:// の処理
-	protocol.handle('asset', (request) => {
+	protocol.handle("asset", (request) => {
 		const urlObj = new URL(request.url);
 		// URLのパス部分 (例: /Part-0.pdf) から先頭のスラッシュを取り除くことで、大文字小文字の自動変換によるエラーを防ぐ
-		const filename = decodeURIComponent(urlObj.pathname.replace(/^\//, ''));
+		const filename = decodeURIComponent(urlObj.pathname.replace(/^\//, ""));
 		const isPackaged = app.isPackaged;
 		let assetPath: string;
 		if (isPackaged) {
-			assetPath = join(process.resourcesPath, 'assets', filename);
+			assetPath = join(process.resourcesPath, "assets", filename);
 		} else {
-			assetPath = join(__dirname, '../../assets', filename);
+			assetPath = join(__dirname, "../../assets", filename);
 		}
 		return net.fetch(pathToFileURL(assetPath).toString());
 	});
@@ -90,19 +90,19 @@ app.whenReady().then(() => {
 	// Default open or close DevTools by F12 in development
 	// and ignore CommandOrControl + R in production.
 	// see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-	app.on('browser-window-created', (_, window) => {
+	app.on("browser-window-created", (_, window) => {
 		optimizer.watchWindowShortcuts(window);
 	});
 
 	// IPC test
-	ipcMain.on('ping', () => console.log('pong'));
+	ipcMain.on("ping", () => console.log("pong"));
 
 	// Initialize Custom Handlers
 	setupIpcHandlers();
 
 	createWindow();
 
-	app.on('activate', () => {
+	app.on("activate", () => {
 		// On macOS it's common to re-create a window in the app when the
 		// dock icon is clicked and there are no other windows open.
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -112,7 +112,7 @@ app.whenReady().then(() => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
+app.on("window-all-closed", () => {
 	app.quit();
 });
 

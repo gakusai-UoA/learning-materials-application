@@ -1,10 +1,10 @@
-import { ChevronLeft, ChevronRight, Home, Sidebar, Terminal } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { SlideViewer } from '@/components/SlideViewer';
-import { Button } from '@/components/ui/button';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { WorkspacePane } from '@/components/WorkspacePane';
+import { ChevronLeft, ChevronRight, Home, Sidebar, Terminal } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { SlideViewer } from "@/components/SlideViewer";
+import { Button } from "@/components/ui/button";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { WorkspacePane } from "@/components/WorkspacePane";
 
 export function LearningView() {
 	const { id } = useParams();
@@ -24,7 +24,7 @@ export function LearningView() {
 			{/* 簡易ヘッダー・ナビゲーション */}
 			<header className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-4">
 				<div className="flex items-center gap-2">
-					<Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+					<Button variant="ghost" size="icon" onClick={() => navigate("/")}>
 						<Home className="h-4 w-4" />
 					</Button>
 					<span className="font-semibold text-sm">Part {partId}を開いています</span>
@@ -48,7 +48,7 @@ export function LearningView() {
 						title="エディタ領域の表示切替"
 					>
 						<Sidebar className="mr-1 h-4 w-4" />
-						{showWorkspace ? 'エディタを隠す' : 'エディタを表示'}
+						{showWorkspace ? "エディタを隠す" : "エディタを表示"}
 					</Button>
 
 					{/* 前後ナビゲーション */}

@@ -1,15 +1,15 @@
-import { exec } from 'node:child_process';
-import { ipcMain } from 'electron';
-import { globalState } from '../state';
+import { exec } from "node:child_process";
+import { ipcMain } from "electron";
+import { globalState } from "../state";
 
 export function setupTerminalHandlers() {
-	ipcMain.handle('open-terminal', async () => {
+	ipcMain.handle("open-terminal", async () => {
 		const dir = globalState.workspaceDir || process.cwd();
 
 		try {
-			if (process.platform === 'darwin') {
+			if (process.platform === "darwin") {
 				exec(`open -a Terminal "${dir}"`);
-			} else if (process.platform === 'win32') {
+			} else if (process.platform === "win32") {
 				exec(`start cmd /K "cd /d ${dir}"`);
 			} else {
 				exec(`x-terminal-emulator --working-directory="${dir}"`);

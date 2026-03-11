@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from './ui/button';
+import { useEffect, useRef, useState } from "react";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "./ui/button";
 
 // Viteのビルドやアセット解決の不具合を確実に回避するため、CDNから直接ワーカーを読む
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -84,7 +84,7 @@ export function SlideViewer({ partId }: SlideViewerProps) {
 					Prev
 				</Button>
 				<span className="font-medium text-muted-foreground text-sm">
-					{pageNumber} / {numPages || '?'}
+					{pageNumber} / {numPages || "?"}
 				</span>
 				<Button
 					variant="outline"

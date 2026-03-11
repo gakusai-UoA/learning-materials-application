@@ -1,6 +1,6 @@
-import type { ChildProcess } from 'node:child_process';
-import * as os from 'node:os';
-import * as path from 'node:path';
+import type { ChildProcess } from "node:child_process";
+import * as os from "node:os";
+import * as path from "node:path";
 
 interface GlobalState {
 	workspaceDir: string;
@@ -9,7 +9,7 @@ interface GlobalState {
 }
 
 export const globalState: GlobalState = {
-	workspaceDir: path.join(os.homedir(), 'LearningAppWorkspace'),
+	workspaceDir: path.join(os.homedir(), "LearningAppWorkspace"),
 	activeReactProcess: null,
 	activeHonoProcess: null,
 };

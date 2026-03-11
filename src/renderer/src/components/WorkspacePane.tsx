@@ -1,7 +1,7 @@
-import Editor from '@monaco-editor/react';
-import { Globe, Terminal as TerminalIcon } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
+import Editor from "@monaco-editor/react";
+import { Globe, Terminal as TerminalIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
 
 interface WorkspacePaneProps {
 	partId: number;
@@ -22,8 +22,8 @@ export default app
 
 export function WorkspacePane({ partId }: WorkspacePaneProps) {
 	// Active Toggles
-	const [activeEnv, setActiveEnv] = useState<'react' | 'hono'>('react');
-	const [activeView, setActiveView] = useState<'editor' | 'preview'>('editor');
+	const [activeEnv, setActiveEnv] = useState<"react" | "hono">("react");
+	const [activeView, setActiveView] = useState<"editor" | "preview">("editor");
 
 	// Code state
 	const [reactCode, setReactCode] = useState(REACT_MOCK);
@@ -36,13 +36,13 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 	const [honoPort, setHonoPort] = useState<number>(8787);
 
 	// URL paths
-	const [honoUrlPath, setHonoUrlPath] = useState('/');
-	const [honoInputUrl, setHonoInputUrl] = useState('/');
+	const [honoUrlPath, setHonoUrlPath] = useState("/");
+	const [honoInputUrl, setHonoInputUrl] = useState("/");
 
 	// Logs state
-	const [honoServerLogs, setHonoServerLogs] = useState<{ type: 'stdout' | 'stderr'; text: string }[]>([]);
-	const [reactBrowserLogs, setReactBrowserLogs] = useState<{ type: 'stdout' | 'stderr'; text: string }[]>([]);
-	const [honoBrowserLogs, setHonoBrowserLogs] = useState<{ type: 'stdout' | 'stderr'; text: string }[]>([]);
+	const [honoServerLogs, setHonoServerLogs] = useState<{ type: "stdout" | "stderr"; text: string }[]>([]);
+	const [reactBrowserLogs, setReactBrowserLogs] = useState<{ type: "stdout" | "stderr"; text: string }[]>([]);
+	const [honoBrowserLogs, setHonoBrowserLogs] = useState<{ type: "stdout" | "stderr"; text: string }[]>([]);
 
 	// Refs
 	const serverLogEndRef = useRef<HTMLDivElement>(null);
@@ -51,13 +51,13 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 
 	// スクロール処理
 	useEffect(() => {
-		serverLogEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+		serverLogEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [honoServerLogs]);
 	useEffect(() => {
-		reactBrowserLogEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+		reactBrowserLogEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [reactBrowserLogs]);
 	useEffect(() => {
-		honoBrowserLogEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+		honoBrowserLogEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [honoBrowserLogs]);
 
 	// 初期化
@@ -67,20 +67,20 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		});
 
 		window.api.onServerLog((log) => {
-			if (log.text.startsWith('[Browser]')) {
-				if (log.serverType === 'react') {
+			if (log.text.startsWith("[Browser]")) {
+				if (log.serverType === "react") {
 					setReactBrowserLogs((prev) => [
 						...prev,
-						{ type: log.type, text: log.text.replace('[Browser] ', '') },
+						{ type: log.type, text: log.text.replace("[Browser] ", "") },
 					]);
 				} else {
 					setHonoBrowserLogs((prev) => [
 						...prev,
-						{ type: log.type, text: log.text.replace('[Browser] ', '') },
+						{ type: log.type, text: log.text.replace("[Browser] ", "") },
 					]);
 				}
 			} else {
-				if (log.serverType === 'hono') {
+				if (log.serverType === "hono") {
 					setHonoServerLogs((prev) => [...prev, { type: log.type, text: log.text }]);
 				}
 			}
@@ -88,24 +88,24 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 
 		return () => {
 			window.api.offServerLog();
-			if (reactRunning) window.api.stopServer('react');
-			if (honoRunning) window.api.stopServer('hono');
+			if (reactRunning) window.api.stopServer("react");
+			if (honoRunning) window.api.stopServer("hono");
 		};
-	}, [partId]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [partId]);
 
 	// タブ切り替え時の自動起動・停止
 	useEffect(() => {
-		if (activeEnv === 'react' && !reactRunning) {
-			startServer('react');
-		} else if (activeEnv === 'hono' && !honoRunning) {
-			startServer('hono');
+		if (activeEnv === "react" && !reactRunning) {
+			startServer("react");
+		} else if (activeEnv === "hono" && !honoRunning) {
+			startServer("hono");
 		}
-	}, [activeEnv, partId]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [activeEnv, partId]);
 
 	const loadFiles = async () => {
-		// 実際のファイル名に合わせて調整。とりあえず固定パスとして試行
-		const reactFile = `Part-${partId}/frontend/src/App.tsx`;
-		const honoFile = `Part-${partId}/backend/src/index.ts`;
+		// ユーザー要望のディレクトリ構成 (partX/react, partX/hono)
+		const reactFile = `Part-${partId}/react/App.tsx`;
+		const honoFile = `Part-${partId}/hono/index.ts`;
 
 		const reactRes = await window.api.readFile(reactFile);
 		if (reactRes.success && reactRes.content) setReactCode(reactRes.content);
@@ -114,80 +114,79 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		if (honoRes.success && honoRes.content) setHonoCode(honoRes.content);
 	};
 
-	const saveFile = async (type: 'react' | 'hono', currentCode: string) => {
-		const filename =
-			type === 'react' ? `Part-${partId}/frontend/src/App.tsx` : `Part-${partId}/backend/src/index.ts`;
+	const saveFile = async (type: "react" | "hono", currentCode: string) => {
+		const filename = type === "react" ? `Part-${partId}/react/App.tsx` : `Part-${partId}/hono/index.ts`;
 
 		const formatRes = await window.api.formatCode(filename, currentCode);
 		let finalCode = currentCode;
 		if (formatRes.success && formatRes.formatted) {
 			finalCode = formatRes.formatted;
-			if (type === 'react' && finalCode !== currentCode) setReactCode(finalCode);
-			if (type === 'hono' && finalCode !== currentCode) setHonoCode(finalCode);
+			if (type === "react" && finalCode !== currentCode) setReactCode(finalCode);
+			if (type === "hono" && finalCode !== currentCode) setHonoCode(finalCode);
 		}
 
 		await window.api.writeFile(filename, finalCode);
 	};
 
 	const handleEditorChange = (val: string | undefined) => {
-		const newCode = val || '';
-		if (activeEnv === 'react') {
+		const newCode = val || "";
+		if (activeEnv === "react") {
 			setReactCode(newCode);
 		} else {
 			setHonoCode(newCode);
 		}
 	};
 
-	const switchEnv = async (env: 'react' | 'hono') => {
+	const switchEnv = async (env: "react" | "hono") => {
 		if (activeEnv === env) return;
 		// 他の環境へ移る際に、現在エディタが表示されていれば保存
-		if (activeView === 'editor') {
-			await saveFile(activeEnv, activeEnv === 'react' ? reactCode : honoCode);
+		if (activeView === "editor") {
+			await saveFile(activeEnv, activeEnv === "react" ? reactCode : honoCode);
 		}
 		setActiveEnv(env);
 	};
 
-	const switchView = async (view: 'editor' | 'preview') => {
+	const switchView = async (view: "editor" | "preview") => {
 		if (activeView === view) return;
 		// プレビュー等へ移る際に保存
-		if (activeView === 'editor') {
-			await saveFile(activeEnv, activeEnv === 'react' ? reactCode : honoCode);
+		if (activeView === "editor") {
+			await saveFile(activeEnv, activeEnv === "react" ? reactCode : honoCode);
 		}
 		setActiveView(view);
 	};
 
-	const startServer = async (type: 'react' | 'hono') => {
+	const startServer = async (type: "react" | "hono") => {
 		const res = await window.api.startServer(partId, type);
 		if (res.success) {
-			if (type === 'react') {
+			if (type === "react") {
 				setReactRunning(true);
 				if (res.port) setReactPort(res.port);
 				setReactBrowserLogs([
-					{ type: 'stdout', text: `React開発サーバーをポート ${res.port || 5173} で起動しました` },
+					{ type: "stdout", text: `React開発サーバーをポート ${res.port || 5173} で起動しました` },
 				]);
 			} else {
 				setHonoRunning(true);
 				if (res.port) setHonoPort(res.port);
 				setHonoServerLogs([
-					{ type: 'stdout', text: `Hono開発サーバーをポート ${res.port || 8787} で起動しました` },
+					{ type: "stdout", text: `Hono開発サーバーをポート ${res.port || 8787} で起動しました` },
 				]);
 			}
 		} else {
-			if (type === 'react') setReactBrowserLogs([{ type: 'stderr', text: `起動失敗: ${res.error}` }]);
-			if (type === 'hono') setHonoServerLogs([{ type: 'stderr', text: `起動失敗: ${res.error}` }]);
+			if (type === "react") setReactBrowserLogs([{ type: "stderr", text: `起動失敗: ${res.error}` }]);
+			if (type === "hono") setHonoServerLogs([{ type: "stderr", text: `起動失敗: ${res.error}` }]);
 		}
 	};
 
 	const executeHonoNav = (e: React.FormEvent) => {
 		e.preventDefault();
 		let dest = honoInputUrl;
-		if (!dest.startsWith('/')) dest = `/${dest}`;
+		if (!dest.startsWith("/")) dest = `/${dest}`;
 		setHonoUrlPath(dest);
 	};
 
 	// ログ描画ヘルパー
 	const renderLogs = (
-		logs: { type: 'stdout' | 'stderr'; text: string }[],
+		logs: { type: "stdout" | "stderr"; text: string }[],
 		endRef: React.RefObject<HTMLDivElement | null>,
 	) => (
 		<div className="flex-1 overflow-y-auto p-3 font-mono text-sm text-zinc-300 leading-relaxed">
@@ -195,7 +194,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 				<p className="text-zinc-500 italic opacity-50">出力はありません…</p>
 			) : (
 				logs.map((log, i) => (
-					<div key={i} className={`whitespace-pre-wrap ${log.type === 'stderr' ? 'text-red-400' : ''}`}>
+					<div key={i} className={`whitespace-pre-wrap ${log.type === "stderr" ? "text-red-400" : ""}`}>
 						{log.text}
 					</div>
 				))
@@ -211,21 +210,21 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 				<div className="flex flex-wrap gap-2">
 					<button
 						className={`flex items-center gap-2 rounded-md px-4 py-1.5 font-bold text-sm transition-colors ${
-							activeEnv === 'react'
-								? 'bg-primary text-primary-foreground shadow'
-								: 'bg-transparent text-muted-foreground hover:bg-muted/50'
+							activeEnv === "react"
+								? "bg-primary text-primary-foreground shadow"
+								: "bg-transparent text-muted-foreground hover:bg-muted/50"
 						}`}
-						onClick={() => switchEnv('react')}
+						onClick={() => switchEnv("react")}
 					>
 						<Globe className="h-4 w-4" /> React
 					</button>
 					<button
 						className={`flex items-center gap-2 rounded-md px-4 py-1.5 font-bold text-sm transition-colors ${
-							activeEnv === 'hono'
-								? 'bg-primary text-primary-foreground shadow'
-								: 'bg-transparent text-muted-foreground hover:bg-muted/50'
+							activeEnv === "hono"
+								? "bg-primary text-primary-foreground shadow"
+								: "bg-transparent text-muted-foreground hover:bg-muted/50"
 						}`}
-						onClick={() => switchEnv('hono')}
+						onClick={() => switchEnv("hono")}
 					>
 						<TerminalIcon className="h-4 w-4" /> Hono
 					</button>
@@ -236,21 +235,21 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 			<div className="flex h-10 shrink-0 items-center border-b bg-muted/10 px-2">
 				<button
 					className={`h-full cursor-pointer border-b-2 px-4 py-1.5 font-semibold text-sm transition-colors ${
-						activeView === 'editor'
-							? 'border-primary text-primary'
-							: 'border-transparent text-muted-foreground hover:text-foreground'
+						activeView === "editor"
+							? "border-primary text-primary"
+							: "border-transparent text-muted-foreground hover:text-foreground"
 					}`}
-					onClick={() => switchView('editor')}
+					onClick={() => switchView("editor")}
 				>
 					エディター
 				</button>
 				<button
 					className={`h-full cursor-pointer border-b-2 px-4 py-1.5 font-semibold text-sm transition-colors ${
-						activeView === 'preview'
-							? 'border-primary text-primary'
-							: 'border-transparent text-muted-foreground hover:text-foreground'
+						activeView === "preview"
+							? "border-primary text-primary"
+							: "border-transparent text-muted-foreground hover:text-foreground"
 					}`}
-					onClick={() => switchView('preview')}
+					onClick={() => switchView("preview")}
 				>
 					プレビュー
 				</button>
@@ -259,21 +258,26 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 			{/* コンテンツエリア */}
 			<div className="relative flex-1 overflow-hidden">
 				{/* === EDITOR VIEW === */}
-				{activeView === 'editor' && (
+				{activeView === "editor" && (
 					<div className="absolute inset-0 flex flex-col bg-zinc-950">
 						<ResizablePanelGroup orientation="vertical">
-							<ResizablePanel defaultSize={activeEnv === 'react' ? 100 : 70} minSize={30}>
+							<ResizablePanel defaultSize={activeEnv === "react" ? 100 : 70} minSize={30}>
 								<div className="h-full w-full">
 									<Editor
 										height="100%"
 										defaultLanguage="typescript"
+										path={
+											activeEnv === "react"
+												? `Part-${partId}/react/App.tsx`
+												: `Part-${partId}/hono/index.ts`
+										}
 										theme="vs-dark"
-										value={activeEnv === 'react' ? reactCode : honoCode}
+										value={activeEnv === "react" ? reactCode : honoCode}
 										onChange={handleEditorChange}
 										options={{
 											minimap: { enabled: false },
 											fontSize: 14,
-											wordWrap: 'on',
+											wordWrap: "on",
 											fixedOverflowWidgets: true,
 										}}
 									/>
@@ -281,7 +285,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 							</ResizablePanel>
 
 							{/* HonoのみServer Consoleを表示 */}
-							{activeEnv === 'hono' && (
+							{activeEnv === "hono" && (
 								<>
 									<ResizableHandle withHandle />
 									<ResizablePanel
@@ -308,14 +312,14 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 				)}
 
 				{/* === PREVIEW VIEW === */}
-				{activeView === 'preview' && (
+				{activeView === "preview" && (
 					<div className="absolute inset-0 flex flex-col bg-white">
 						<ResizablePanelGroup orientation="vertical">
 							{/* 上部：Iframe */}
 							<ResizablePanel defaultSize={70} minSize={30}>
 								<div className="flex h-full flex-col">
 									{/* ReactはURLバー無し、HonoはURLバーあり */}
-									{activeEnv === 'hono' ? (
+									{activeEnv === "hono" ? (
 										<div className="flex h-10 shrink-0 items-center border-b bg-zinc-100 px-4">
 											<div className="mr-2 font-mono text-sm text-zinc-500">
 												http://localhost:{honoPort}
@@ -339,11 +343,11 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 									)}
 
 									<div className="relative flex-1 bg-white">
-										{(activeEnv === 'react' && reactRunning) ||
-										(activeEnv === 'hono' && honoRunning) ? (
+										{(activeEnv === "react" && reactRunning) ||
+										(activeEnv === "hono" && honoRunning) ? (
 											<iframe
-												key={`${activeEnv}-${activeEnv === 'react' ? reactPort : honoPort}-${honoUrlPath}`}
-												src={`http://localhost:${activeEnv === 'react' ? reactPort : honoPort}${activeEnv === 'hono' ? honoUrlPath : ''}`}
+												key={`${activeEnv}-${activeEnv === "react" ? reactPort : honoPort}-${honoUrlPath}`}
+												src={`http://localhost:${activeEnv === "react" ? reactPort : honoPort}${activeEnv === "hono" ? honoUrlPath : ""}`}
 												className="absolute inset-0 h-full w-full border-none"
 												title="Preview"
 											/>
@@ -370,14 +374,14 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 									<div className="flex-1" />
 									<button
 										onClick={() =>
-											activeEnv === 'react' ? setReactBrowserLogs([]) : setHonoBrowserLogs([])
+											activeEnv === "react" ? setReactBrowserLogs([]) : setHonoBrowserLogs([])
 										}
 										className="hover:text-zinc-200"
 									>
 										クリア
 									</button>
 								</div>
-								{activeEnv === 'react'
+								{activeEnv === "react"
 									? renderLogs(reactBrowserLogs, reactBrowserLogEndRef)
 									: renderLogs(honoBrowserLogs, honoBrowserLogEndRef)}
 							</ResizablePanel>

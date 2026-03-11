@@ -1,4 +1,4 @@
-import type { ElectronAPI } from '@electron-toolkit/preload';
+import type { ElectronAPI } from "@electron-toolkit/preload";
 
 declare global {
 	interface Window {
@@ -16,12 +16,12 @@ declare global {
 			) => Promise<{ success: boolean; formatted?: string; error?: string }>;
 			startServer: (
 				partId: number,
-				type: 'react' | 'hono',
+				type: "react" | "hono",
 			) => Promise<{ success: boolean; port?: number; error?: string }>;
-			stopServer: (type: 'react' | 'hono') => Promise<{ success: boolean; error?: string }>;
+			stopServer: (type: "react" | "hono") => Promise<{ success: boolean; error?: string }>;
 			openTerminal: () => Promise<{ success: boolean; error?: string }>;
 			onServerLog: (
-				callback: (data: { type: 'stdout' | 'stderr'; serverType: 'react' | 'hono'; text: string }) => void,
+				callback: (data: { type: "stdout" | "stderr"; serverType: "react" | "hono"; text: string }) => void,
 			) => void;
 			offServerLog: () => void;
 		};

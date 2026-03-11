@@ -1,6 +1,6 @@
-import { Route, Routes } from 'react-router-dom';
-import { LearningView } from './pages/LearningView';
-import { StartMenu } from './pages/StartMenu';
+import { Route, Routes } from "react-router-dom";
+import { LearningView } from "./pages/LearningView";
+import { StartMenu } from "./pages/StartMenu";
 
 function App() {
 	return (

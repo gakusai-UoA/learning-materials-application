@@ -1,48 +1,48 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-type SessionType = 'all' | '1' | '2';
+type SessionType = "all" | "1" | "2";
 
 const PARTS = [
-	{ id: 0, title: 'Git & GitHub', desc: 'チーム開発の基礎とバージョン管理', stack: 'Git' },
-	{ id: 1, title: 'JavaScript の基礎', desc: 'Webを動かす言語の基本文法', stack: 'JavaScript' },
-	{ id: 2, title: 'ロジック構築とデータ構造', desc: '関数、配列、アロー関数', stack: 'JavaScript' },
-	{ id: 3, title: 'TypeScript の導入', desc: '型推論、インターフェース、安全な開発', stack: 'TypeScript' },
-	{ id: 4, title: 'はじめてのバックエンド', desc: 'Honoを使った基本的なAPI作成', stack: 'Hono' },
-	{ id: 5, title: 'データベースとの連携', desc: 'SQLとCloudflare D1への接続', stack: 'Hono' },
-	{ id: 6, title: 'React の基礎', desc: 'コンポーネントとJSX、UI構築', stack: 'React' },
-	{ id: 7, title: 'React の状態管理', desc: 'useState, useEffect, API通信', stack: 'React' },
-	{ id: 8, title: 'フロントとバックの結合', desc: 'API経由でのデータのやり取り', stack: 'React ・ Hono' },
-	{ id: 9, title: 'デプロイ & 発展', desc: 'Firebase HostingとWorkersへの公開', stack: '' },
+	{ id: 0, title: "Git & GitHub", desc: "チーム開発の基礎とバージョン管理", stack: "Git" },
+	{ id: 1, title: "JavaScript の基礎", desc: "Webを動かす言語の基本文法", stack: "JavaScript" },
+	{ id: 2, title: "ロジック構築とデータ構造", desc: "関数、配列、アロー関数", stack: "JavaScript" },
+	{ id: 3, title: "TypeScript の導入", desc: "型推論、インターフェース、安全な開発", stack: "TypeScript" },
+	{ id: 4, title: "はじめてのバックエンド", desc: "Honoを使った基本的なAPI作成", stack: "Hono" },
+	{ id: 5, title: "データベースとの連携", desc: "SQLとCloudflare D1への接続", stack: "Hono" },
+	{ id: 6, title: "React の基礎", desc: "コンポーネントとJSX、UI構築", stack: "React" },
+	{ id: 7, title: "React の状態管理", desc: "useState, useEffect, API通信", stack: "React" },
+	{ id: 8, title: "フロントとバックの結合", desc: "API経由でのデータのやり取り", stack: "React ・ Hono" },
+	{ id: 9, title: "デプロイ & 発展", desc: "Firebase HostingとWorkersへの公開", stack: "" },
 ];
 
 export function StartMenu() {
 	const navigate = useNavigate();
 	const [isPreparing, setIsPreparing] = useState(false);
-	const [session, setSession] = useState<SessionType>('all');
-	const [stack, setStack] = useState<string>('all');
+	const [session, setSession] = useState<SessionType>("all");
+	const [stack, setStack] = useState<string>("all");
 
 	const STACK_OPTIONS = [
-		{ value: 'all', label: 'すべての技術 (フィルターなし)' },
-		{ value: 'git', label: 'Git' },
-		{ value: 'js-ts', label: 'JavaScript/TypeScript' },
-		{ value: 'react', label: 'React' },
-		{ value: 'hono', label: 'Hono' },
+		{ value: "all", label: "すべての技術 (フィルターなし)" },
+		{ value: "git", label: "Git" },
+		{ value: "js-ts", label: "JavaScript/TypeScript" },
+		{ value: "react", label: "React" },
+		{ value: "hono", label: "Hono" },
 	];
 
 	const filteredParts = useMemo(() => {
 		return PARTS.filter((part) => {
-			if (session === '1' && part.id > 4) return false;
-			if (session === '2' && part.id < 4) return false;
+			if (session === "1" && part.id > 4) return false;
+			if (session === "2" && part.id < 4) return false;
 
-			if (stack !== 'all') {
+			if (stack !== "all") {
 				const s = part.stack.toLowerCase();
-				if (stack === 'git' && !s.includes('git')) return false;
-				if (stack === 'js-ts' && !s.includes('javascript') && !s.includes('typescript')) return false;
-				if (stack === 'react' && !s.includes('react')) return false;
-				if (stack === 'hono' && !s.includes('hono')) return false;
+				if (stack === "git" && !s.includes("git")) return false;
+				if (stack === "js-ts" && !s.includes("javascript") && !s.includes("typescript")) return false;
+				if (stack === "react" && !s.includes("react")) return false;
+				if (stack === "hono" && !s.includes("hono")) return false;
 			}
 
 			return true;
@@ -55,7 +55,7 @@ export function StartMenu() {
 			.verifyEnvironment()
 			.then(() => setIsPreparing(false))
 			.catch((e) => {
-				console.error('Environment check failed', e);
+				console.error("Environment check failed", e);
 				setIsPreparing(false);
 			});
 	}, []);
@@ -78,34 +78,34 @@ export function StartMenu() {
 				<div className="mb-8 flex flex-col items-start justify-between gap-4 rounded-xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center">
 					<div className="flex w-full gap-1.5 overflow-x-auto rounded-lg bg-muted p-1.5 sm:w-auto">
 						<button
-							onClick={() => setSession('all')}
+							onClick={() => setSession("all")}
 							className={cn(
-								'whitespace-nowrap rounded-md px-4 py-1.5 font-medium text-sm transition-all',
-								session === 'all'
-									? 'bg-background text-foreground shadow-sm'
-									: 'text-muted-foreground hover:text-foreground',
+								"whitespace-nowrap rounded-md px-4 py-1.5 font-medium text-sm transition-all",
+								session === "all"
+									? "bg-background text-foreground shadow-sm"
+									: "text-muted-foreground hover:text-foreground",
 							)}
 						>
 							すべて
 						</button>
 						<button
-							onClick={() => setSession('1')}
+							onClick={() => setSession("1")}
 							className={cn(
-								'whitespace-nowrap rounded-md px-4 py-1.5 font-medium text-sm transition-all',
-								session === '1'
-									? 'bg-background text-foreground shadow-sm'
-									: 'text-muted-foreground hover:text-foreground',
+								"whitespace-nowrap rounded-md px-4 py-1.5 font-medium text-sm transition-all",
+								session === "1"
+									? "bg-background text-foreground shadow-sm"
+									: "text-muted-foreground hover:text-foreground",
 							)}
 						>
 							第1回 (Part 0-4)
 						</button>
 						<button
-							onClick={() => setSession('2')}
+							onClick={() => setSession("2")}
 							className={cn(
-								'whitespace-nowrap rounded-md px-4 py-1.5 font-medium text-sm transition-all',
-								session === '2'
-									? 'bg-background text-foreground shadow-sm'
-									: 'text-muted-foreground hover:text-foreground',
+								"whitespace-nowrap rounded-md px-4 py-1.5 font-medium text-sm transition-all",
+								session === "2"
+									? "bg-background text-foreground shadow-sm"
+									: "text-muted-foreground hover:text-foreground",
 							)}
 						>
 							第2回 (Part 4-9)
@@ -136,8 +136,8 @@ export function StartMenu() {
 						<Button
 							variant="link"
 							onClick={() => {
-								setSession('all');
-								setStack('all');
+								setSession("all");
+								setStack("all");
 							}}
 						>
 							リセット
