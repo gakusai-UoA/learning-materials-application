@@ -120,11 +120,12 @@ app.on("window-all-closed", () => {
 
 // アプリ終了時に裏側で走っているVite/Wrangler等のサーバープロセスを確実に止める
 app.on("before-quit", () => {
+	const kill = require("tree-kill");
 	if (globalState.activeReactProcess) {
-		globalState.activeReactProcess.kill();
+		kill(globalState.activeReactProcess.pid, "SIGTERM");
 	}
 	if (globalState.activeHonoProcess) {
-		globalState.activeHonoProcess.kill();
+		kill(globalState.activeHonoProcess.pid, "SIGTERM");
 	}
 });
 

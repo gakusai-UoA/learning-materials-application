@@ -19,6 +19,15 @@ export function LearningView() {
 	useEffect(() => {
 		setShowWorkspace(partId !== 0 && partId !== 9);
 	}, [partId]);
+
+	const handlePartNavigate = (dir: "prev" | "next") => {
+		if (dir === "prev" && partId > 0) {
+			navigate(`/part/${partId - 1}`);
+		} else if (dir === "next" && partId < 9) {
+			navigate(`/part/${partId + 1}`);
+		}
+	};
+
 	return (
 		<div className="flex h-screen w-screen flex-col overflow-hidden bg-background">
 			{/* 簡易ヘッダー・ナビゲーション */}
@@ -35,7 +44,7 @@ export function LearningView() {
 					<Button
 						variant="outline"
 						size="sm"
-						onClick={() => window.api.openTerminal()}
+						onClick={() => window.api.openTerminal(partId)}
 						title="OS標準のターミナルを開く"
 					>
 						<Terminal className="mr-1 h-4 w-4" />
@@ -91,7 +100,11 @@ export function LearningView() {
 					</ResizablePanelGroup>
 				) : (
 					<div className="h-full w-full">
-						<SlideViewer partId={partId} />
+						<SlideViewer
+							partId={partId}
+							keyboardEnabled={!showWorkspace}
+							onPartNavigate={handlePartNavigate}
+						/>
 					</div>
 				)}
 			</main>

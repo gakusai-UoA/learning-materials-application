@@ -2,14 +2,21 @@ import { spawn } from "node:child_process";
 import * as path from "node:path";
 import { BrowserWindow, ipcMain } from "electron";
 import { globalState } from "../state";
+const kill = require("tree-kill");
 
 export function setupServerHandlers() {
 	ipcMain.handle("start-server", async (_, partId: number, type: "react" | "hono") => {
 		const processKey = type === "react" ? "activeReactProcess" : "activeHonoProcess";
 
 		if (globalState[processKey]) {
-			globalState[processKey].kill();
-			globalState[processKey] = null;
+			await new Promise<void>((resolve) => {
+				kill(globalState[processKey]!.pid!, "SIGTERM", () => {
+					globalState[processKey] = null;
+					resolve();
+				});
+			});
+			// ポート解放を待つ
+			await new Promise((r) => setTimeout(r, 500));
 		}
 
 		// typeごとにディレクトリを分ける（例: react / hono）
@@ -72,8 +79,14 @@ export function setupServerHandlers() {
 	ipcMain.handle("stop-server", async (_, type: "react" | "hono") => {
 		const processKey = type === "react" ? "activeReactProcess" : "activeHonoProcess";
 		if (globalState[processKey]) {
-			globalState[processKey].kill();
-			globalState[processKey] = null;
+			await new Promise<void>((resolve) => {
+				kill(globalState[processKey]!.pid!, "SIGTERM", () => {
+					globalState[processKey] = null;
+					resolve();
+				});
+			});
+			// ポート解放を待つ
+			await new Promise((r) => setTimeout(r, 500));
 		}
 		return { success: true };
 	});

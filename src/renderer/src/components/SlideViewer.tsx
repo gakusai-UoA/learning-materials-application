@@ -10,9 +10,11 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.vers
 
 interface SlideViewerProps {
 	partId: number;
+	keyboardEnabled?: boolean;
+	onPartNavigate?: (direction: "prev" | "next") => void;
 }
 
-export function SlideViewer({ partId }: SlideViewerProps) {
+export function SlideViewer({ partId, keyboardEnabled = false, onPartNavigate }: SlideViewerProps) {
 	const [numPages, setNumPages] = useState<number>();
 	const [pageNumber, setPageNumber] = useState<number>(1);
 	const [pdfError, setPdfError] = useState<string | null>(null);
@@ -42,11 +44,50 @@ export function SlideViewer({ partId }: SlideViewerProps) {
 		setPageNumber(1);
 	}
 
+	const handlePrevSlide = () => setPageNumber((prev) => Math.max(prev - 1, 1));
+	const handleNextSlide = () => setPageNumber((prev) => Math.min(prev + 1, numPages || 1));
+
+	// キーボードナビゲーション
+	useEffect(() => {
+		if (!keyboardEnabled) return;
+
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") return;
+
+			switch (e.key) {
+				case "ArrowLeft":
+				case "a":
+				case "A":
+					handlePrevSlide();
+					break;
+				case "ArrowRight":
+				case "d":
+				case "D":
+					handleNextSlide();
+					break;
+				case "h":
+				case "H":
+					if (onPartNavigate) onPartNavigate("prev");
+					break;
+				case "l":
+				case "L":
+					if (onPartNavigate) onPartNavigate("next");
+					break;
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [keyboardEnabled, numPages, onPartNavigate]);
+
 	return (
 		<div className="flex h-full flex-col overflow-hidden border-r bg-zinc-100 p-4 dark:bg-zinc-900">
+			{/* biome-ignore lint/a11y/useKeyWithClickEvents: グローバルなuseEffectでキー操作をハンドルしているため */}
 			<div
-				className="flex flex-1 items-center justify-center overflow-y-auto overflow-x-hidden bg-muted/20 p-4"
+				className="flex flex-1 items-center justify-center overflow-y-auto overflow-x-hidden bg-muted/20 p-4 cursor-pointer"
 				ref={containerRef}
+				onClick={handleNextSlide}
+				title="クリックで次のスライドへ"
 			>
 				{pdfError ? (
 					<div className="p-2 text-center text-destructive">
@@ -74,12 +115,7 @@ export function SlideViewer({ partId }: SlideViewerProps) {
 
 			{/* ページネーションコントロール */}
 			<div className="flex h-12 shrink-0 items-center justify-between border-t bg-card px-4">
-				<Button
-					variant="outline"
-					size="sm"
-					disabled={pageNumber <= 1}
-					onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
-				>
+				<Button variant="outline" size="sm" disabled={pageNumber <= 1} onClick={handlePrevSlide}>
 					<ChevronLeft className="mr-1 h-4 w-4" />
 					Prev
 				</Button>
@@ -90,7 +126,7 @@ export function SlideViewer({ partId }: SlideViewerProps) {
 					variant="outline"
 					size="sm"
 					disabled={!numPages || pageNumber >= numPages}
-					onClick={() => setPageNumber((prev) => Math.min(prev + 1, numPages || 1))}
+					onClick={handleNextSlide}
 				>
 					Next
 					<ChevronRight className="ml-1 h-4 w-4" />

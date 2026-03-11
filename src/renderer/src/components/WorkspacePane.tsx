@@ -7,6 +7,9 @@ interface WorkspacePaneProps {
 	partId: number;
 }
 
+// ATA (型推論) の読み込み済みキャッシュ
+const LOADED_TYPES = new Set<string>();
+
 // 初期コードモック
 const REACT_MOCK = `import { useState } from "react";
 
@@ -79,11 +82,35 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		honoBrowserLogEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [honoBrowserLogs]);
 
-	// 初期化
+	// 初期化 (partId 変更時にサーバー停止→リセット→ファイル読み込み→再スタート)
 	useEffect(() => {
-		window.api.getWorkspaceDir().then(() => {
-			loadFiles();
-		});
+		let cancelled = false;
+
+		const setup = async () => {
+			// 1. 古いサーバーを必ず停止する
+			await window.api.stopServer("react");
+			await window.api.stopServer("hono");
+
+			if (cancelled) return;
+
+			// 2. 状態をリセット
+			setReactRunning(false);
+			setHonoRunning(false);
+			setReactBrowserLogs([]);
+			setHonoBrowserLogs([]);
+			setHonoServerLogs([]);
+
+			// 3. ファイル読み込み
+			await window.api.getWorkspaceDir();
+			await loadFiles();
+
+			if (cancelled) return;
+
+			// 4. 現在のタブのサーバーを起動
+			startServer(activeEnv);
+		};
+
+		setup();
 
 		window.api.onServerLog((log) => {
 			if (log.text.startsWith("[Browser]")) {
@@ -102,27 +129,27 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 				if (log.serverType === "hono") {
 					setHonoServerLogs((prev) => [...prev, { type: log.type, text: log.text }]);
 				} else if (log.serverType === "react") {
-					// Vite (React) のサーバー出力（ビルドエラー等）も表示させる
 					setReactBrowserLogs((prev) => [...prev, { type: log.type, text: log.text }]);
 				}
 			}
 		});
 
 		return () => {
+			cancelled = true;
 			window.api.offServerLog();
-			if (reactRunning) window.api.stopServer("react");
-			if (honoRunning) window.api.stopServer("hono");
+			window.api.stopServer("react");
+			window.api.stopServer("hono");
 		};
 	}, [partId]);
 
-	// タブ切り替え時の自動起動・停止
+	// タブ切り替え時の自動起動（同一パート内でReact⇔Honoを切り替えた場合）
 	useEffect(() => {
 		if (activeEnv === "react" && !reactRunning) {
 			startServer("react");
 		} else if (activeEnv === "hono" && !honoRunning) {
 			startServer("hono");
 		}
-	}, [activeEnv, partId]);
+	}, [activeEnv]);
 
 	const loadFiles = async () => {
 		// ユーザー要望のディレクトリ構成 (partX/react, partX/hono)
@@ -219,7 +246,23 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		}
 	};
 
-	// Monaco Editor の初期設定（JSX解釈と簡易型宣言の注入）
+	const loadTypesToMonaco = async (monaco: Monaco, packageName: string) => {
+		if (LOADED_TYPES.has(packageName)) return;
+		LOADED_TYPES.add(packageName); // 再フェッチ防止
+		try {
+			const res = await window.api.fetchTypes(packageName);
+			if (res.success && res.files) {
+				for (const file of res.files) {
+					monaco.languages.typescript.typescriptDefaults.addExtraLib(file.content, file.path);
+				}
+				console.log(`Loaded types for ${packageName} (${res.files.length} files)`);
+			}
+		} catch (err) {
+			console.error(`Failed to load types for ${packageName}`, err);
+		}
+	};
+
+	// Monaco Editor の初期設定（JSX解釈と本格的型宣言の注入）
 	const handleEditorWillMount = (monaco: Monaco) => {
 		monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
 			jsx: monaco.languages.typescript.JsxEmit.ReactJSX, // React 17以降のJSXトランスフォーム
@@ -230,41 +273,13 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 			moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
 			module: monaco.languages.typescript.ModuleKind.CommonJS,
 			target: monaco.languages.typescript.ScriptTarget.ESNext,
+			strict: true,
 		});
 
-		// 学習表示用の簡易的なReactの型宣言をモック
-		monaco.languages.typescript.typescriptDefaults.addExtraLib(
-			`declare module "react" {
-				export function useState<T>(initialState: T | (() => T)): [T, (newState: T | ((prevState: T) => T)) => void];
-				export function useEffect(effect: () => void | (() => void), deps?: readonly any[]): void;
-				export function useRef<T>(initialValue: T): { current: T };
-				export function useMemo<T>(factory: () => T, deps: readonly any[] | undefined): T;
-				export function useCallback<T extends (...args: any[]) => any>(callback: T, deps: readonly any[] | undefined): T;
-				export const StrictMode: any;
-				const React: any;
-				export default React;
-			}
-			declare module "react/jsx-runtime" {
-				export const jsx: any;
-				export const jsxs: any;
-				export const Fragment: any;
-			}`,
-			"file:///node_modules/@types/react/index.d.ts",
-		);
-
-		// Honoの簡易的な型宣言をモック
-		monaco.languages.typescript.typescriptDefaults.addExtraLib(
-			`declare module "hono" {
-				export class Hono {
-					get(path: string, handler: (c: any) => any): this;
-					post(path: string, handler: (c: any) => any): this;
-					put(path: string, handler: (c: any) => any): this;
-					delete(path: string, handler: (c: any) => any): this;
-				}
-				export default Hono;
-			}`,
-			"file:///node_modules/hono/index.d.ts",
-		);
+		// 必要な型定義を各パッケージから取得して注入する
+		loadTypesToMonaco(monaco, "react");
+		loadTypesToMonaco(monaco, "@types/react");
+		loadTypesToMonaco(monaco, "hono");
 	};
 
 	// ログ描画ヘルパー

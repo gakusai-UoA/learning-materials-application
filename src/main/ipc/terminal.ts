@@ -3,8 +3,10 @@ import { ipcMain } from "electron";
 import { globalState } from "../state";
 
 export function setupTerminalHandlers() {
-	ipcMain.handle("open-terminal", async () => {
-		const dir = globalState.workspaceDir || process.cwd();
+	ipcMain.handle("open-terminal", async (_, partId: number) => {
+		const dir = globalState.workspaceDir
+			? require("node:path").join(globalState.workspaceDir, `Part-${partId}`)
+			: process.cwd();
 
 		try {
 			if (process.platform === "darwin") {
