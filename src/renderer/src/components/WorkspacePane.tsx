@@ -174,15 +174,23 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 	const saveFile = async (type: "react" | "hono", currentCode: string) => {
 		const filename = type === "react" ? `Part-${partId}/react/src/App.tsx` : `Part-${partId}/hono/src/index.ts`;
 
-		const formatRes = await window.api.formatCode(filename, currentCode);
 		let finalCode = currentCode;
-		if (formatRes.success && formatRes.formatted) {
-			finalCode = formatRes.formatted;
-			if (type === "react" && finalCode !== currentCode) setReactCode(finalCode);
-			if (type === "hono" && finalCode !== currentCode) setHonoCode(finalCode);
+		try {
+			const formatRes = await window.api.formatCode(filename, currentCode);
+			if (formatRes.success && formatRes.formatted) {
+				finalCode = formatRes.formatted;
+				if (type === "react" && finalCode !== currentCode) setReactCode(finalCode);
+				if (type === "hono" && finalCode !== currentCode) setHonoCode(finalCode);
+			}
+		} catch {
+			// フォーマット失敗時は元のコードをそのまま使う
 		}
 
-		await window.api.writeFile(filename, finalCode);
+		try {
+			await window.api.writeFile(filename, finalCode);
+		} catch {
+			// 書き込み失敗も握りつぶす（UI遷移をブロックしない）
+		}
 	};
 
 	const handleEditorChange = (val: string | undefined) => {
@@ -194,20 +202,20 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		}
 	};
 
-	const switchEnv = async (env: "react" | "hono") => {
+	const switchEnv = (env: "react" | "hono") => {
 		if (activeEnv === env) return;
-		// 他の環境へ移る際に、現在エディタが表示されていれば保存
+		// 保存はバックグラウンドで実行（UI遷移をブロックしない）
 		if (activeView === "editor") {
-			await saveFile(activeEnv, activeEnv === "react" ? reactCode : honoCode);
+			saveFile(activeEnv, activeEnv === "react" ? reactCode : honoCode);
 		}
 		setActiveEnv(env);
 	};
 
-	const switchView = async (view: "editor" | "preview") => {
+	const switchView = (view: "editor" | "preview") => {
 		if (activeView === view) return;
-		// プレビュー等へ移る際に保存
+		// 保存はバックグラウンドで実行（UI遷移をブロックしない）
 		if (activeView === "editor") {
-			await saveFile(activeEnv, activeEnv === "react" ? reactCode : honoCode);
+			saveFile(activeEnv, activeEnv === "react" ? reactCode : honoCode);
 		}
 		setActiveView(view);
 	};
