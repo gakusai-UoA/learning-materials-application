@@ -119,7 +119,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 			await fs.writeFile(
 				path.join(honoPath, "wrangler.jsonc"),
 				`{
-	"account_id": "",
+	//"account_id": "",
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "part${partId}-hono",
 	"main": "src/index.ts",
