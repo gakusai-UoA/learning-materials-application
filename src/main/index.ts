@@ -119,18 +119,24 @@ app.on("window-all-closed", () => {
 });
 
 // アプリ終了時に裏側で走っているVite/Wrangler等のサーバープロセスを確実に止める
-app.on("before-quit", () => {
+const killAllServers = () => {
 	const kill = require("tree-kill");
-	const signal = process.platform === "win32" ? "SIGKILL" : "SIGTERM";
 	if (globalState.activeReactProcess?.pid) {
-		kill(globalState.activeReactProcess.pid, signal);
+		try {
+			kill(globalState.activeReactProcess.pid, "SIGKILL");
+		} catch {}
 		globalState.activeReactProcess = null;
 	}
 	if (globalState.activeHonoProcess?.pid) {
-		kill(globalState.activeHonoProcess.pid, signal);
+		try {
+			kill(globalState.activeHonoProcess.pid, "SIGKILL");
+		} catch {}
 		globalState.activeHonoProcess = null;
 	}
-});
+};
+
+app.on("before-quit", killAllServers);
+app.on("will-quit", killAllServers);
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
