@@ -115,24 +115,31 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
+	killAllServers();
 	app.quit();
 });
 
 // アプリ終了時に裏側で走っているVite/Wrangler等のサーバープロセスを確実に止める
 const killAllServers = () => {
-	const kill = require("tree-kill");
-	if (globalState.activeReactProcess?.pid) {
+	const { execSync } = require("node:child_process");
+	const pids = [
+		globalState.activeReactProcess?.pid,
+		globalState.activeHonoProcess?.pid,
+	].filter(Boolean);
+
+	for (const pid of pids) {
 		try {
-			kill(globalState.activeReactProcess.pid, "SIGKILL");
+			if (process.platform === "win32") {
+				execSync(`taskkill /F /T /PID ${pid}`, { stdio: "ignore" });
+			} else {
+				// 子プロセスも含めてSIGKILLで強制終了
+				execSync(`pkill -9 -P ${pid}`, { stdio: "ignore" });
+				process.kill(pid as number, "SIGKILL");
+			}
 		} catch {}
-		globalState.activeReactProcess = null;
 	}
-	if (globalState.activeHonoProcess?.pid) {
-		try {
-			kill(globalState.activeHonoProcess.pid, "SIGKILL");
-		} catch {}
-		globalState.activeHonoProcess = null;
-	}
+	globalState.activeReactProcess = null;
+	globalState.activeHonoProcess = null;
 };
 
 app.on("before-quit", killAllServers);
