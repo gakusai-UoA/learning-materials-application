@@ -86,31 +86,40 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 	}, [honoBrowserLogs]);
 
 	// 初期化 (partId 変更時にサーバー停止→リセット→ファイル読み込み→再スタート)
+	const setupRunning = useRef(false);
 	useEffect(() => {
 		let cancelled = false;
 
 		const setup = async () => {
-			// 1. 古いサーバーを必ず停止する
-			await window.api.stopServer("react");
-			await window.api.stopServer("hono");
+			// StrictMode対策: 前回のsetupが完了するまで待つ
+			if (setupRunning.current) return;
+			setupRunning.current = true;
 
-			if (cancelled) return;
+			try {
+				// 1. 古いサーバーを必ず停止する
+				await window.api.stopServer("react");
+				await window.api.stopServer("hono");
 
-			// 2. 状態をリセット
-			setReactRunning(false);
-			setHonoRunning(false);
-			setReactBrowserLogs([]);
-			setHonoBrowserLogs([]);
-			setHonoServerLogs([]);
+				if (cancelled) return;
 
-			// 3. ファイル読み込み
-			await window.api.getWorkspaceDir();
-			await loadFiles();
+				// 2. 状態をリセット
+				setReactRunning(false);
+				setHonoRunning(false);
+				setReactBrowserLogs([]);
+				setHonoBrowserLogs([]);
+				setHonoServerLogs([]);
 
-			if (cancelled) return;
+				// 3. ファイル読み込み
+				await window.api.getWorkspaceDir();
+				await loadFiles();
 
-			// 4. 現在のタブのサーバーを起動
-			startServer(activeEnv);
+				if (cancelled) return;
+
+				// 4. 現在のタブのサーバーを起動
+				startServer(activeEnv);
+			} finally {
+				setupRunning.current = false;
+			}
 		};
 
 		setup();
