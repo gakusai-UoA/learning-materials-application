@@ -19,9 +19,12 @@ const PARTS = [
 	{ id: 9, title: "デプロイ & 発展", desc: "Firebase HostingとWorkersへの公開", stack: "" },
 ];
 
+// モジュールスコープ: ルーティングで再マウントされてもリセットされない
+let envInitialized = false;
+
 export function StartMenu() {
 	const navigate = useNavigate();
-	const [isPreparing, setIsPreparing] = useState(true);
+	const [isPreparing, setIsPreparing] = useState(!envInitialized);
 	const [progressMsg, setProgressMsg] = useState("環境を確認しています...");
 	const [session, setSession] = useState<SessionType>("all");
 	const [stack, setStack] = useState<string>("all");
@@ -52,6 +55,8 @@ export function StartMenu() {
 	}, [session, stack]);
 
 	useEffect(() => {
+		if (envInitialized) return; // 起動時に1回だけ実行
+
 		setIsPreparing(true);
 
 		const handleProgress = (msg: string) => {
@@ -62,6 +67,7 @@ export function StartMenu() {
 		window.api
 			.verifyEnvironment()
 			.then(() => {
+				envInitialized = true;
 				setIsPreparing(false);
 			})
 			.catch((e) => {
