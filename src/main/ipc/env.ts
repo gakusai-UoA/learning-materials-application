@@ -12,7 +12,7 @@ export function setupEnvHandlers() {
 		const isMac = os.platform() === "darwin";
 
 		// ElectronのメインプロセスではPATHが極端に短いことがあるため、
-		// ログインシェルのPATHを取得してマージする（fnm/nvm/volta等のバージョンマネージャ対応）
+		// シェルからPATHを取得してマージする（fnm/nvm/volta等のバージョンマネージャ対応）
 		if (isMac || process.platform === "linux") {
 			try {
 				const shell = process.env.SHELL || "/bin/zsh";
@@ -30,6 +30,36 @@ export function setupEnvHandlers() {
 			} catch {
 				// フォールバック: よく使われるパスを手動で追加
 				for (const p of ["/usr/local/bin", "/opt/homebrew/bin"]) {
+					if (!process.env.PATH?.includes(p)) {
+						process.env.PATH = `${process.env.PATH}${path.delimiter}${p}`;
+					}
+				}
+			}
+		} else if (isWin) {
+			try {
+				// PowerShellプロファイルを読み込んでPATHを取得（fnm/nvm-windowsはプロファイルで動的にPATH追加する）
+				const { stdout } = await execAsync(
+					"powershell -Command \"echo $env:PATH\"",
+				);
+				const winPath = stdout.trim();
+				if (winPath) {
+					const currentPaths = new Set((process.env.PATH || "").split(path.delimiter));
+					for (const p of winPath.split(";")) {
+						if (p && !currentPaths.has(p)) {
+							currentPaths.add(p);
+						}
+					}
+					process.env.PATH = [...currentPaths].join(path.delimiter);
+				}
+			} catch {
+				// フォールバック: よくあるnodeのパス
+				const fallbacks = [
+					path.join(os.homedir(), "AppData", "Roaming", "fnm"),
+					path.join(os.homedir(), "AppData", "Roaming", "nvm"),
+					path.join(os.homedir(), ".volta", "bin"),
+					"C:\\Program Files\\nodejs",
+				];
+				for (const p of fallbacks) {
 					if (!process.env.PATH?.includes(p)) {
 						process.env.PATH = `${process.env.PATH}${path.delimiter}${p}`;
 					}

@@ -12,10 +12,17 @@ export function setupFormatHandlers() {
 			let stdoutData = "";
 			let stderrData = "";
 
+			// biomeが未インストールの場合にnpxがハングするのを防ぐためタイムアウト設定
+			const timeout = setTimeout(() => {
+				child.kill();
+				resolve({ success: false, error: "Format timed out" });
+			}, 5000);
+
 			child.stdout.on("data", (data) => (stdoutData += data));
 			child.stderr.on("data", (data) => (stderrData += data));
 
 			child.on("close", (code) => {
+				clearTimeout(timeout);
 				if (code === 0) {
 					resolve({ success: true, formatted: stdoutData });
 				} else {
@@ -23,7 +30,10 @@ export function setupFormatHandlers() {
 				}
 			});
 
-			child.on("error", (err) => resolve({ success: false, error: err.message }));
+			child.on("error", (err) => {
+				clearTimeout(timeout);
+				resolve({ success: false, error: err.message });
+			});
 
 			child.stdin.write(content);
 			child.stdin.end();
