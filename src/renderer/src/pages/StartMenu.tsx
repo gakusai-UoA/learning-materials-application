@@ -65,15 +65,24 @@ export function StartMenu() {
 		window.api.onEnvProgress(handleProgress);
 
 		window.api
-			.verifyEnvironment()
+			.checkUpdate()
+			.then((hasUpdate) => {
+				// アップデート処理が行われている場合、あるいは完了して再起動待ちの場合は
+				// 画面をプログレスのままフリーズさせておく(resolveされないのでここには来ないか、quitされるか)
+				// もしfalseで返ってきた場合のみ、次の処理に進む
+				if (hasUpdate === false) {
+					return window.api.verifyEnvironment();
+				}
+				// アップデートダウンロード完了時などは `app.quit()` などが走るためUIはこのままにしておく
+				return new Promise(() => {}); // never resolve
+			})
 			.then(() => {
 				envInitialized = true;
 				setIsPreparing(false);
 			})
 			.catch((e) => {
-				console.error("Environment check failed", e);
-				setProgressMsg("環境構築中にエラーが発生しました。");
-				// しばらくしてから進めるか？
+				console.error("Environment/Update check failed", e);
+				setProgressMsg("チェック中にエラーが発生しました。");
 				setTimeout(() => setIsPreparing(false), 3000);
 			})
 			.finally(() => {

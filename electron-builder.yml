@@ -3,6 +3,10 @@ productName: 勉強会資料
 directories:
     buildResources: build
     output: dist
+publish:
+    provider: github
+    owner: gakusai-UoA
+    repo: learning-materials-application
 files:
     - 'out/main/**/*'
     - 'out/renderer/**/*'
@@ -26,6 +30,8 @@ mac:
               - x64
               - arm64
     category: public.app-category.education
+    identity: null
+    notarize: false
 dmg:
     artifactName: learning-material-${version}-${arch}.${ext}
 win:

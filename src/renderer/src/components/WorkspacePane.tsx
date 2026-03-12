@@ -1,5 +1,5 @@
 import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
-import { ExternalLink, Globe, RefreshCcw, Terminal as TerminalIcon } from "lucide-react";
+import { ExternalLink, Globe, RefreshCcw, Save, Terminal as TerminalIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
 
@@ -199,8 +199,6 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		}
 	};
 
-	const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
 	const handleEditorChange = (val: string | undefined) => {
 		const newCode = val || "";
 		if (activeEnv === "react") {
@@ -208,13 +206,10 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		} else {
 			setHonoCode(newCode);
 		}
+	};
 
-		if (autoSaveTimeoutRef.current) {
-			clearTimeout(autoSaveTimeoutRef.current);
-		}
-		autoSaveTimeoutRef.current = setTimeout(() => {
-			saveFile(activeEnv, newCode);
-		}, 1000);
+	const handleSave = () => {
+		saveFile(activeEnv, activeEnv === "react" ? reactCode : honoCode);
 	};
 
 	const handleResetTemplate = async () => {
@@ -325,16 +320,16 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		loadTypesToMonaco(monaco, "hono");
 	};
 
-	// フォーカス離脱時の自動保存
+	// エディタのマウント時
 	activeEnvRef.current = activeEnv;
 	activeViewRef.current = activeView;
-	const handleEditorMount: OnMount = (editor) => {
+	const handleEditorMount: OnMount = (editor, monaco) => {
 		editorRef.current = editor;
-		editor.onDidBlurEditorWidget(() => {
-			// エディタがDOMから削除される時のblurはスキップ（switchView内で別途保存済み）
-			if (activeViewRef.current !== "editor") return;
+		
+		// Cmd+S / Ctrl+S での手動保存
+		editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
 			const code = editor.getValue();
-			if (!code.trim()) return; // 空コードは保存しない
+			if (!code.trim()) return;
 			saveFile(activeEnvRef.current, code);
 		});
 	};
@@ -385,6 +380,14 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 					</button>
 				</div>
 				<div className="flex flex-wrap gap-2">
+					<button
+						className="flex items-center gap-1.5 rounded-md border border-input bg-primary px-3 py-1.5 text-primary-foreground font-medium text-xs hover:bg-primary/90 transition-colors shadow-sm"
+						onClick={handleSave}
+						title="コードを保存して反映させます"
+					>
+						<Save className="h-4 w-4" />
+						保存
+					</button>
 					<button
 						className="flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-muted-foreground text-xs hover:bg-destructive hover:text-destructive-foreground transition-colors"
 						onClick={handleResetTemplate}

@@ -171,6 +171,8 @@ export function setupEnvHandlers() {
 					"drizzle-orm": "^0.38.0",
 					"drizzle-zod": "^0.7.0",
 					zod: "^3.23.0",
+					"@hono/zod-validator": "^0.2.2",
+					"@google/genai": "^1.44.0",
 				},
 				devDependencies: {
 					vite: "^5.1.4",

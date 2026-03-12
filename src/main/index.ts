@@ -6,6 +6,15 @@ import icon from "../../resources/icon.png?asset";
 import { setupIpcHandlers } from "./ipc";
 import { globalState } from "./state";
 
+let isWindowCreated = false;
+
+function safeCreateWindow() {
+	if (!isWindowCreated) {
+		isWindowCreated = true;
+		createWindow();
+	}
+}
+
 protocol.registerSchemesAsPrivileged([
 	{
 		scheme: "asset",
@@ -102,12 +111,12 @@ app.whenReady().then(() => {
 	// Initialize Custom Handlers
 	setupIpcHandlers();
 
-	createWindow();
+	safeCreateWindow();
 
 	app.on("activate", () => {
 		// On macOS it's common to re-create a window in the app when the
 		// dock icon is clicked and there are no other windows open.
-		if (BrowserWindow.getAllWindows().length === 0) createWindow();
+		if (BrowserWindow.getAllWindows().length === 0) safeCreateWindow();
 	});
 });
 

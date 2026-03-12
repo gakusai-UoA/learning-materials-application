@@ -13,6 +13,7 @@ const api = {
 	startServer: (partId: number, type: "react" | "hono") => ipcRenderer.invoke("start-server", partId, type),
 	stopServer: (type: "react" | "hono") => ipcRenderer.invoke("stop-server", type),
 	resetTemplate: (partId: number, type: "react" | "hono") => ipcRenderer.invoke("reset-template", partId, type),
+	checkUpdate: () => ipcRenderer.invoke("check-update"),
 	openTerminal: (partId: number) => ipcRenderer.invoke("open-terminal", partId),
 	openEditor: (partId: number) => ipcRenderer.invoke("open-editor", partId),
 	fetchTypes: (packageName: string) => ipcRenderer.invoke("fetch-types", packageName),

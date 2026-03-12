@@ -1,9 +1,13 @@
 {
   "name": "learning-app",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "現代的Web開発・基礎勉強会 学習用アプリ",
   "main": "./out/main/index.js",
   "author": "凶兆の黒猫",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gakusai-UoA/learning-materials-application.git"
+  },
   "homepage": "https://noirch.at/",
   "scripts": {
     "format": "biome format --write .",
@@ -28,6 +32,8 @@
     "@radix-ui/react-slot": "^1.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.8.3",
     "lucide-react": "^0.577.0",
     "pdfjs-dist": "^5.5.207",
     "radix-ui": "^1.4.3",

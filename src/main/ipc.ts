@@ -1,5 +1,6 @@
 import { setupEnvHandlers } from "./ipc/env";
 import { setupTemplateHandlers } from "./ipc/template";
+import { setupUpdateHandlers } from "./ipc/update";
 import { setupFormatHandlers } from "./ipc/format";
 import { setupFsHandlers } from "./ipc/fs";
 import { setupServerHandlers } from "./ipc/server";
@@ -16,4 +17,5 @@ export function setupIpcHandlers() {
 	setupTerminalHandlers();
 	setupTypesHandlers();
 	setupTemplateHandlers();
+	setupUpdateHandlers();
 }
