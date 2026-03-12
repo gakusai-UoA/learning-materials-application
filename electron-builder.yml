@@ -1,43 +1,52 @@
-appId: com.electron.app
-productName: app-template
+appId: com.gdgoc.webstudyapp
+productName: 勉強会資料
 directories:
-  buildResources: build
+    buildResources: build
+    output: dist
 files:
-  - "!**/.vscode/*"
-  - "!src/*"
-  - "!electron.vite.config.{js,ts,mjs,cjs}"
-  - "!{dev-app-update.yml,CHANGELOG.md,README.md}"
-  - "!{.env,.env.*,.npmrc,pnpm-lock.yaml}"
-  - "!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}"
+    - 'out/main/**/*'
+    - 'out/renderer/**/*'
+    - 'out/preload/**/*'
+    - 'package.json'
+    - '!**/.vscode/*'
+    - '!src/*'
+    - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+    - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
-  - resources/**
-win:
-  executableName: app-template
-nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
-  createDesktopShortcut: always
+    - resources/**
+extraResources:
+    - from: assets/
+      to: assets/
+      filter:
+          - '**/*.pdf'
 mac:
-  entitlementsInherit: build/entitlements.mac.plist
-  extendInfo:
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
-    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: false
+    target:
+        - target: dmg
+          arch:
+              - x64
+              - arm64
+    category: public.app-category.education
+    identity: null
+    notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+    artifactName: ${productName}-${version}-${arch}.${ext}
+win:
+    target:
+        - target: nsis
+          arch:
+              - x64
+              - ia32
+    executableName: learning-app
+nsis:
+    artifactName: ${productName}-Setup-${version}.${ext}
+    shortcutName: ${productName}
+    uninstallDisplayName: ${productName}
+    oneClick: true
+    perMachine: true
+    createDesktopShortcut: false
+    createStartMenuShortcut: true
 linux:
-  target:
-    - AppImage
-    - snap
-    - deb
-  maintainer: electronjs.org
-  category: Utility
-appImage:
-  artifactName: ${name}-${version}.${ext}
+    target:
+        - AppImage
+    category: Education
 npmRebuild: false
-publish:
-  provider: generic
-  url: https://example.com/auto-updates

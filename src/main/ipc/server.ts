@@ -6,7 +6,15 @@ import { globalState } from "../state";
 const kill = require("tree-kill");
 
 export function setupServerHandlers() {
+	// 起動中の排他制御（Promiseで待機キューを管理）
+	const startingLock = new Map<string, Promise<unknown>>();
+
 	ipcMain.handle("start-server", async (_, partId: number, type: "react" | "hono") => {
+		// 前回の起動処理が終わるまで待つ
+		if (startingLock.has(type)) {
+			await startingLock.get(type);
+		}
+
 		const processKey = type === "react" ? "activeReactProcess" : "activeHonoProcess";
 
 		if (globalState[processKey]) {
@@ -24,7 +32,7 @@ export function setupServerHandlers() {
 		const subDir = type === "react" ? "react" : "hono";
 		const projectPath = path.join(globalState.workspaceDir, `Part-${partId}`, subDir);
 
-		return new Promise((resolve) => {
+		const startPromise = new Promise((resolve) => {
 			const cmd = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 			// プロジェクトルート（workspaceDir）で親ディレクトリのモジュールを使えるように exec で実行
 			const args = type === "react" ? ["exec", "vite"] : ["exec", "wrangler", "dev", "src/index.ts"];
@@ -75,6 +83,13 @@ export function setupServerHandlers() {
 				resolve({ success: false, error: e.message });
 			});
 		});
+
+		// ロックをセットし、完了後にクリア
+		startingLock.set(type, startPromise);
+		const result = await startPromise;
+		startingLock.delete(type);
+
+		return result;
 	});
 
 	ipcMain.handle("stop-server", async (_, type: "react" | "hono") => {

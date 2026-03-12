@@ -11,21 +11,39 @@ export function setupEnvHandlers() {
 		const isWin = os.platform() === "win32";
 		const isMac = os.platform() === "darwin";
 
-		// ElectronのメインプロセスではPATHが極端に短いことがあるため補完する
-		if (isMac || isWin) {
+		// ElectronのメインプロセスではPATHが極端に短いことがあるため、
+		// ログインシェルのPATHを取得してマージする（fnm/nvm/volta等のバージョンマネージャ対応）
+		if (isMac || process.platform === "linux") {
+			try {
+				const shell = process.env.SHELL || "/bin/zsh";
+				const { stdout } = await execAsync(`${shell} -ilc 'echo $PATH'`);
+				const shellPath = stdout.trim();
+				if (shellPath) {
+					const currentPaths = new Set((process.env.PATH || "").split(path.delimiter));
+					for (const p of shellPath.split(path.delimiter)) {
+						if (p && !currentPaths.has(p)) {
+							currentPaths.add(p);
+						}
+					}
+					process.env.PATH = [...currentPaths].join(path.delimiter);
+				}
+			} catch {
+				// フォールバック: よく使われるパスを手動で追加
+				for (const p of ["/usr/local/bin", "/opt/homebrew/bin"]) {
+					if (!process.env.PATH?.includes(p)) {
+						process.env.PATH = `${process.env.PATH}${path.delimiter}${p}`;
+					}
+				}
+			}
+		}
+
+		// Antigravity パスの追加
+		{
 			const agyPath = isWin
 				? path.join(os.homedir(), "AppData", "Local", "Programs", "Antigravity")
 				: path.join(os.homedir(), ".antigravity", "antigravity", "bin");
-
-			const pathsToAdd = [agyPath];
-			if (isMac || process.platform === "linux") {
-				pathsToAdd.push("/usr/local/bin", "/opt/homebrew/bin", "/opt/nodejs/bin");
-			}
-
-			for (const p of pathsToAdd) {
-				if (!process.env.PATH?.includes(p)) {
-					process.env.PATH = `${process.env.PATH}${path.delimiter}${p}`;
-				}
+			if (!process.env.PATH?.includes(agyPath)) {
+				process.env.PATH = `${process.env.PATH}${path.delimiter}${agyPath}`;
 			}
 		}
 
@@ -120,18 +138,20 @@ export function setupEnvHandlers() {
 					react: "^18.2.0",
 					"react-dom": "^18.2.0",
 					hono: "^4.0.0",
-					cors: "^2.8.5",
+					"drizzle-orm": "^0.38.0",
+					"drizzle-zod": "^0.7.0",
+					zod: "^3.23.0",
 				},
 				devDependencies: {
 					vite: "^5.1.4",
 					"@vitejs/plugin-react": "^4.2.1",
 					tailwindcss: "^4.0.0",
 					"@tailwindcss/vite": "^4.0.0",
-					wrangler: "^3.0.0",
+					wrangler: "^4.0.0",
 					typescript: "^5.2.2",
+					"drizzle-kit": "^0.30.0",
 					"@types/react": "^18.2.61",
 					"@types/react-dom": "^18.2.19",
-					"@types/cors": "^2.8.17",
 				},
 			};
 			await fs.writeFile(path.join(globalState.workspaceDir, "package.json"), JSON.stringify(rootPkg, null, 2));

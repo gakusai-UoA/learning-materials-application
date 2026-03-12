@@ -92,11 +92,11 @@ export default function App() {
 			);
 			await fs.writeFile(
 				path.join(honoPath, "src", "index.ts"),
-				`import { Hono } from "hono";
+				`import { type Context, Hono } from "hono";
 
 const app = new Hono();
 
-app.get("/", (c) => c.text("Hello Hono!"));
+app.get("/", (c: Context) => c.text("Hello Hono!"));
 
 export default app;`,
 			);

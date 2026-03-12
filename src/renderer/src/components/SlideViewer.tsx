@@ -101,7 +101,7 @@ export function SlideViewer({ partId, keyboardEnabled = false, onPartNavigate }:
 					>
 						<Page
 							pageNumber={pageNumber}
-							renderTextLayer={false}
+							renderTextLayer={true}
 							renderAnnotationLayer={false}
 							className="shadow-xl"
 							width={containerWidth} // レスポンシブな幅
@@ -111,23 +111,48 @@ export function SlideViewer({ partId, keyboardEnabled = false, onPartNavigate }:
 			</div>
 
 			{/* ページネーションコントロール */}
-			<div className="flex h-12 shrink-0 items-center justify-between border-t bg-card px-4">
-				<Button variant="outline" size="sm" disabled={pageNumber <= 1} onClick={handlePrevSlide}>
-					<ChevronLeft className="mr-1 h-4 w-4" />
-					Prev
-				</Button>
-				<span className="font-medium text-muted-foreground text-sm">
-					{pageNumber} / {numPages || "?"}
-				</span>
-				<Button
-					variant="outline"
-					size="sm"
-					disabled={!numPages || pageNumber >= numPages}
-					onClick={handleNextSlide}
-				>
-					Next
-					<ChevronRight className="ml-1 h-4 w-4" />
-				</Button>
+			<div className="flex shrink-0 flex-col gap-1 border-t bg-card px-4 py-2">
+				{/* シークバー */}
+				{numPages && numPages > 1 && (
+					<input
+						type="range"
+						min={1}
+						max={numPages}
+						value={pageNumber}
+						onChange={(e) => setPageNumber(Number(e.target.value))}
+						className="h-1.5 w-full cursor-pointer accent-primary"
+					/>
+				)}
+				{/* ボタン＋ページ入力 */}
+				<div className="flex items-center justify-between">
+					<Button variant="outline" size="sm" disabled={pageNumber <= 1} onClick={handlePrevSlide}>
+						<ChevronLeft className="mr-1 h-4 w-4" />
+						Prev
+					</Button>
+					<div className="flex items-center gap-1 text-sm text-muted-foreground">
+						<input
+							type="number"
+							min={1}
+							max={numPages || 1}
+							value={pageNumber}
+							onChange={(e) => {
+								const v = Number(e.target.value);
+								if (v >= 1 && v <= (numPages || 1)) setPageNumber(v);
+							}}
+							className="w-12 rounded border bg-background px-1.5 py-0.5 text-center text-sm outline-none focus:border-primary"
+						/>
+						<span className="font-medium">/ {numPages || "?"}</span>
+					</div>
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={!numPages || pageNumber >= numPages}
+						onClick={handleNextSlide}
+					>
+						Next
+						<ChevronRight className="ml-1 h-4 w-4" />
+					</Button>
+				</div>
 			</div>
 		</div>
 	);

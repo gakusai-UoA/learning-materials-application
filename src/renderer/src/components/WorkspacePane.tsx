@@ -1,4 +1,4 @@
-import Editor, { type Monaco } from "@monaco-editor/react";
+import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
 import { ExternalLink, Globe, RefreshCcw, Terminal as TerminalIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
@@ -70,6 +70,9 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 	const serverLogEndRef = useRef<HTMLDivElement>(null);
 	const reactBrowserLogEndRef = useRef<HTMLDivElement>(null);
 	const honoBrowserLogEndRef = useRef<HTMLDivElement>(null);
+	const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
+	const activeEnvRef = useRef(activeEnv);
+	const activeViewRef = useRef(activeView);
 
 	// スクロール処理
 	useEffect(() => {
@@ -142,8 +145,13 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		};
 	}, [partId]);
 
-	// タブ切り替え時の自動起動（同一パート内でReact⇔Honoを切り替えた場合）
+	// タブ切り替え時の自動起動（初回マウントはsetupで起動するのでスキップ）
+	const isFirstMount = useRef(true);
 	useEffect(() => {
+		if (isFirstMount.current) {
+			isFirstMount.current = false;
+			return;
+		}
 		if (activeEnv === "react" && !reactRunning) {
 			startServer("react");
 		} else if (activeEnv === "hono" && !honoRunning) {
@@ -282,6 +290,20 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		loadTypesToMonaco(monaco, "hono");
 	};
 
+	// フォーカス離脱時の自動保存
+	activeEnvRef.current = activeEnv;
+	activeViewRef.current = activeView;
+	const handleEditorMount: OnMount = (editor) => {
+		editorRef.current = editor;
+		editor.onDidBlurEditorWidget(() => {
+			// エディタがDOMから削除される時のblurはスキップ（switchView内で別途保存済み）
+			if (activeViewRef.current !== "editor") return;
+			const code = editor.getValue();
+			if (!code.trim()) return; // 空コードは保存しない
+			saveFile(activeEnvRef.current, code);
+		});
+	};
+
 	// ログ描画ヘルパー
 	const renderLogs = (
 		logs: { type: "stdout" | "stderr"; text: string }[],
@@ -383,6 +405,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 										value={activeEnv === "react" ? reactCode : honoCode}
 										onChange={handleEditorChange}
 										beforeMount={handleEditorWillMount}
+										onMount={handleEditorMount}
 										options={{
 											minimap: { enabled: false },
 											fontSize: 14,
