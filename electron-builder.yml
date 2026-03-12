@@ -30,8 +30,6 @@ mac:
               - x64
               - arm64
     category: public.app-category.education
-    identity: null
-    notarize: false
 dmg:
     artifactName: learning-material-${version}-${arch}.${ext}
 win:
