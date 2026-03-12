@@ -27,7 +27,7 @@ mac:
               - arm64
     category: public.app-category.education
 dmg:
-    artifactName: ${productName}-${version}-${arch}.${ext}
+    artifactName: learning-material-${version}-${arch}.${ext}
 win:
     target:
         - target: nsis
@@ -36,7 +36,7 @@ win:
               - ia32
     executableName: learning-app
 nsis:
-    artifactName: ${productName}-Setup-${version}.${ext}
+    artifactName: learning-material-Setup-${version}.${ext}
     shortcutName: ${productName}
     uninstallDisplayName: ${productName}
     oneClick: true
