@@ -14,29 +14,26 @@ const LOADED_TYPES = new Set<string>();
 const REACT_MOCK = `import { useState } from "react";
 
 export default function App() {
-  const [count, setCount] = useState(0);
+	const [count, setCount] = useState(0);
 
-  return (
-    <div>
-      <h1>
-        Reactへようこそ！
-      </h1>
-      <button
-        type="button"
-        onClick={() => setCount((c) => c + 1)}
-      >
-        Count: {count}
-      </button>
-    </div>
-  );
+	return (
+		<div>
+			<h1>Reactへようこそ！</h1>
+			<button type="button" onClick={() => setCount((c) => c + 1)}>
+				Count: {count}
+			</button>
+		</div>
+	);
 }
+
 `;
-const HONO_MOCK = `import { Hono } from 'hono'
-const app = new Hono()
+const HONO_MOCK = `import { type Context, Hono } from "hono";
 
-app.get('/', (c) => c.text('Hello Hono!'))
+const app = new Hono();
 
-export default app
+app.get("/", (c: Context) => c.text("Hello Hono!"));
+
+export default app;
 `;
 
 export function WorkspacePane({ partId }: WorkspacePaneProps) {
@@ -202,12 +199,33 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 		}
 	};
 
+	const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
 	const handleEditorChange = (val: string | undefined) => {
 		const newCode = val || "";
 		if (activeEnv === "react") {
 			setReactCode(newCode);
 		} else {
 			setHonoCode(newCode);
+		}
+
+		if (autoSaveTimeoutRef.current) {
+			clearTimeout(autoSaveTimeoutRef.current);
+		}
+		autoSaveTimeoutRef.current = setTimeout(() => {
+			saveFile(activeEnv, newCode);
+		}, 1000);
+	};
+
+	const handleResetTemplate = async () => {
+		if (!confirm("現在のコードを破棄して、初期テンプレートに戻しますか？")) return;
+		const res = await window.api.resetTemplate(partId, activeEnv);
+		if (res.success && res.content) {
+			if (activeEnv === "react") {
+				setReactCode(res.content);
+			} else {
+				setHonoCode(res.content);
+			}
 		}
 	};
 
@@ -368,7 +386,15 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 				</div>
 				<div className="flex flex-wrap gap-2">
 					<button
-						className="flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-muted-foreground text-xs hover:bg-accent hover:text-accent-foreground"
+						className="flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-muted-foreground text-xs hover:bg-destructive hover:text-destructive-foreground transition-colors"
+						onClick={handleResetTemplate}
+						title="現在のコードを初期状態(テンプレート)にリセットします"
+					>
+						<RefreshCcw className="h-4 w-4" />
+						初期化
+					</button>
+					<button
+						className="flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-muted-foreground text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
 						onClick={handleOpenEditor}
 						title="現在のプロジェクトを外部エディター(Antigravity等)で開きます"
 					>

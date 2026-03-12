@@ -12,6 +12,7 @@ const api = {
 	formatCode: (filename: string, content: string) => ipcRenderer.invoke("format-code", filename, content),
 	startServer: (partId: number, type: "react" | "hono") => ipcRenderer.invoke("start-server", partId, type),
 	stopServer: (type: "react" | "hono") => ipcRenderer.invoke("stop-server", type),
+	resetTemplate: (partId: number, type: "react" | "hono") => ipcRenderer.invoke("reset-template", partId, type),
 	openTerminal: (partId: number) => ipcRenderer.invoke("open-terminal", partId),
 	openEditor: (partId: number) => ipcRenderer.invoke("open-editor", partId),
 	fetchTypes: (packageName: string) => ipcRenderer.invoke("fetch-types", packageName),
