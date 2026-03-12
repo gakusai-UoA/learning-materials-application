@@ -1,6 +1,6 @@
 {
   "name": "learning-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "現代的Web開発・基礎勉強会 学習用アプリ",
   "main": "./out/main/index.js",
   "author": "凶兆の黒猫",
