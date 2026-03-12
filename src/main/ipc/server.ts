@@ -32,15 +32,21 @@ export function setupServerHandlers() {
 		const subDir = type === "react" ? "react" : "hono";
 		const projectPath = path.join(globalState.workspaceDir, `Part-${partId}`, subDir);
 
+		let port = type === "react" ? 5173 : 8787; // デフォルト想定ポート
+
 		const startPromise = new Promise((resolve) => {
 			const cmd = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
-			// プロジェクトルート（workspaceDir）で親ディレクトリのモジュールを使えるように exec で実行
-			const args = type === "react" ? ["exec", "vite"] : ["exec", "wrangler", "dev", "src/index.ts"];
+
+			// コマンド引数の組み立て
+			let args: string[] = [];
+			if (type === "react") {
+				args = ["exec", "vite", "--port", port.toString(), "--strictPort"];
+			} else {
+				args = ["exec", "wrangler", "dev", "src/index.ts", "--port", port.toString(), "--remote"];
+			}
 
 			const child = spawn(cmd, args, { cwd: projectPath, shell: true });
 			globalState[processKey] = child;
-
-			let port = type === "react" ? 5173 : 8787; // デフォルト想定ポート
 
 			child.stdout?.on("data", (data) => {
 				const text = data.toString();
@@ -55,6 +61,7 @@ export function setupServerHandlers() {
 					});
 				});
 
+				// Wrangler等が実際には別のポートで立ち上がったケースのフォールバック
 				const match = text.match(/http:\/\/localhost:(\d+)/);
 				if (match?.[1]) {
 					port = parseInt(match[1], 10);

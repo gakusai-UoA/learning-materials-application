@@ -19,7 +19,10 @@ declare global {
 				type: "react" | "hono",
 			) => Promise<{ success: boolean; port?: number; error?: string }>;
 			stopServer: (type: "react" | "hono") => Promise<{ success: boolean; error?: string }>;
-			resetTemplate: (partId: number, type: "react" | "hono") => Promise<{ success: boolean; content?: string; error?: string }>;
+			resetTemplate: (
+				partId: number,
+				type: "react" | "hono",
+			) => Promise<{ success: boolean; content?: string; error?: string }>;
 			checkUpdate: () => Promise<boolean>;
 			openTerminal: (partId: number) => Promise<{ success: boolean; error?: string }>;
 			openEditor: (partId: number) => Promise<{ success: boolean; error?: string }>;

@@ -38,9 +38,7 @@ export function setupEnvHandlers() {
 		} else if (isWin) {
 			try {
 				// PowerShellプロファイルを読み込んでPATHを取得（fnm/nvm-windowsはプロファイルで動的にPATH追加する）
-				const { stdout } = await execAsync(
-					"powershell -Command \"echo $env:PATH\"",
-				);
+				const { stdout } = await execAsync('powershell -Command "echo $env:PATH"');
 				const winPath = stdout.trim();
 				if (winPath) {
 					const currentPaths = new Set((process.env.PATH || "").split(path.delimiter));
@@ -184,6 +182,7 @@ export function setupEnvHandlers() {
 					"drizzle-kit": "^0.30.0",
 					"@types/react": "^18.2.61",
 					"@types/react-dom": "^18.2.19",
+					"@cloudflare/workers-types": "^4.20260312.1",
 				},
 			};
 			await fs.writeFile(path.join(globalState.workspaceDir, "package.json"), JSON.stringify(rootPkg, null, 2));
@@ -209,6 +208,56 @@ export function setupEnvHandlers() {
 					})
 					.catch(() => res());
 			});
+		}
+
+		notify("Wranglerのログイン状態を確認中...");
+		let loggedIn = false;
+		try {
+			await execAsync(
+				process.platform === "win32" ? "pnpm.cmd exec wrangler whoami" : "pnpm exec wrangler whoami",
+				{ cwd: globalState.workspaceDir },
+			);
+			loggedIn = true;
+		} catch {
+			loggedIn = false;
+		}
+
+		if (!loggedIn) {
+			notify("ブラウザが開きます。Wrangler(Cloudflare)のログインを完了してください...");
+			await new Promise<void>((res) => {
+				const cmd = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+				import("node:child_process")
+					.then(({ spawn }) => {
+						// CIモードや非TTYでもブラウザを開かせる工夫が必要な場合があるが、まずはそのまま実行
+						const proc = spawn(cmd, ["exec", "wrangler", "login"], {
+							cwd: globalState.workspaceDir,
+							shell: true,
+						});
+
+						proc.stdout.on("data", (d) => {
+							const text = d.toString().trim();
+							if (text) notify(`Wrangler: ${text.split("\n")[0]}`);
+							process.stdout.write(d);
+						});
+						proc.stderr.on("data", (d) => {
+							process.stderr.write(d);
+						});
+						proc.on("close", () => res());
+						proc.on("error", () => res());
+					})
+					.catch(() => res());
+			});
+
+			// ログインが完了したか最終チェック
+			try {
+				await execAsync(
+					process.platform === "win32" ? "pnpm.cmd exec wrangler whoami" : "pnpm exec wrangler whoami",
+					{ cwd: globalState.workspaceDir },
+				);
+			} catch {
+				notify("ログインが確認できませんでした。Remote起動が失敗する可能性があります。");
+				await new Promise((r) => setTimeout(r, 3000));
+			}
 		}
 
 		notify("準備完了！");

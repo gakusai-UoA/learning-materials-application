@@ -131,10 +131,7 @@ app.on("window-all-closed", () => {
 // アプリ終了時に裏側で走っているVite/Wrangler等のサーバープロセスを確実に止める
 const killAllServers = () => {
 	const { execSync } = require("node:child_process");
-	const pids = [
-		globalState.activeReactProcess?.pid,
-		globalState.activeHonoProcess?.pid,
-	].filter(Boolean);
+	const pids = [globalState.activeReactProcess?.pid, globalState.activeHonoProcess?.pid].filter(Boolean);
 
 	for (const pid of pids) {
 		try {

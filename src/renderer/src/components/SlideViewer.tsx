@@ -129,7 +129,7 @@ export function SlideViewer({ partId, keyboardEnabled = false, onPartNavigate }:
 						<ChevronLeft className="mr-1 h-4 w-4" />
 						Prev
 					</Button>
-					<div className="flex items-center gap-1 text-sm text-muted-foreground">
+					<div className="flex items-center gap-1 text-muted-foreground text-sm">
 						<input
 							type="number"
 							min={1}

@@ -95,7 +95,40 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 				path.join(honoPath, "package.json"),
 				JSON.stringify({ name: `part${partId}-hono`, type: "module" }, null, 2),
 			);
+			await fs.writeFile(
+				path.join(honoPath, "tsconfig.json"),
+				`{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "lib": ["ESNext"],
+    "types": ["@cloudflare/workers-types", "node"]
+  }
+}`,
+			);
 			await fs.writeFile(path.join(honoPath, "src", "index.ts"), HONO_INDEX_TS);
+		}
+
+		// Honoのディレクトリとは別に、wrangler.jsonc がない場合は生成(復活)する
+		try {
+			await fs.access(path.join(honoPath, "wrangler.jsonc"));
+		} catch {
+			await fs.writeFile(
+				path.join(honoPath, "wrangler.jsonc"),
+				`{
+	"account_id": "",
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "part${partId}-hono",
+	"main": "src/index.ts",
+	"compatibility_date": "2024-02-28",
+	"observability": {
+		"enabled": true
+	}
+}`,
+			);
 		}
 	}
 }
@@ -104,9 +137,10 @@ export function setupTemplateHandlers() {
 	ipcMain.handle("reset-template", async (_, partId: number, type: "react" | "hono") => {
 		try {
 			const projectPath = path.join(globalState.workspaceDir, `Part-${partId}`, type);
-			const targetFile = type === "react" ? path.join(projectPath, "src", "App.tsx") : path.join(projectPath, "src", "index.ts");
+			const targetFile =
+				type === "react" ? path.join(projectPath, "src", "App.tsx") : path.join(projectPath, "src", "index.ts");
 			const content = type === "react" ? REACT_APP_TSX : HONO_INDEX_TS;
-			
+
 			await fs.writeFile(targetFile, content);
 			return { success: true, content };
 		} catch (error) {

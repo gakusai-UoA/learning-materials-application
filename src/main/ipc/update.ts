@@ -49,11 +49,15 @@ export function setupUpdateHandlers() {
 									const { done, value } = await reader.read();
 									if (done) break;
 									file.write(value);
-									
+
 									if (contentLength && value) {
 										receivedLength += value.length;
-										const percent = Math.round((receivedLength / parseInt(contentLength)) * 100);
-										sendProgress(`最新バージョン v${info.version} をダウンロードしています... ${percent}%`);
+										const percent = Math.round(
+											(receivedLength / parseInt(contentLength, 10)) * 100,
+										);
+										sendProgress(
+											`最新バージョン v${info.version} をダウンロードしています... ${percent}%`,
+										);
 									}
 								}
 								file.end();

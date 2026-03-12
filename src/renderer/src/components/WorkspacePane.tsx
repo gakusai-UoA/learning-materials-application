@@ -255,7 +255,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 				setHonoRunning(true);
 				if (res.port) setHonoPort(res.port);
 				setHonoServerLogs([
-					{ type: "stdout", text: `Hono開発サーバーをポート ${res.port || 8787} で起動しました` },
+					{ type: "stdout", text: `Hono開発サーバーをポート ${res.port || 8787} で起動しました (--remote)` },
 				]);
 			}
 		} else {
@@ -325,7 +325,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 	activeViewRef.current = activeView;
 	const handleEditorMount: OnMount = (editor, monaco) => {
 		editorRef.current = editor;
-		
+
 		// Cmd+S / Ctrl+S での手動保存
 		editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
 			const code = editor.getValue();
@@ -381,7 +381,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 				</div>
 				<div className="flex flex-wrap gap-2">
 					<button
-						className="flex items-center gap-1.5 rounded-md border border-input bg-primary px-3 py-1.5 text-primary-foreground font-medium text-xs hover:bg-primary/90 transition-colors shadow-sm"
+						className="flex items-center gap-1.5 rounded-md border border-input bg-primary px-3 py-1.5 font-medium text-primary-foreground text-xs shadow-sm transition-colors hover:bg-primary/90"
 						onClick={handleSave}
 						title="コードを保存して反映させます"
 					>
@@ -389,7 +389,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 						保存
 					</button>
 					<button
-						className="flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-muted-foreground text-xs hover:bg-destructive hover:text-destructive-foreground transition-colors"
+						className="flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-muted-foreground text-xs transition-colors hover:bg-destructive hover:text-destructive-foreground"
 						onClick={handleResetTemplate}
 						title="現在のコードを初期状態(テンプレート)にリセットします"
 					>
@@ -397,7 +397,7 @@ export function WorkspacePane({ partId }: WorkspacePaneProps) {
 						初期化
 					</button>
 					<button
-						className="flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-muted-foreground text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+						className="flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-accent-foreground"
 						onClick={handleOpenEditor}
 						title="現在のプロジェクトを外部エディター(Antigravity等)で開きます"
 					>
