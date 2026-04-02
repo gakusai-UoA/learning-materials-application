@@ -196,7 +196,7 @@ export function setupEnvHandlers() {
 				const cmd = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 				import("node:child_process")
 					.then(({ spawn }) => {
-						const proc = spawn(cmd, ["install"], {
+						const proc = spawn(cmd, ["install", "--ignore-scripts"], {
 							cwd: globalState.workspaceDir,
 							shell: true,
 						});
